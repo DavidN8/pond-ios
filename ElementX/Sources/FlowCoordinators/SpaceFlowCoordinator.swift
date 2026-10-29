@@ -47,6 +47,7 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
     private var rolesAndPermissionsFlowCoordinator: RoomRolesAndPermissionsFlowCoordinator?
     // periphery:ignore - retaining purpose
     private var createChildRoomFlowCoordinator: StartChatFlowCoordinator?
+    private var spaceNotesFlowCoordinator: SpaceNotesFlowCoordinator? // matcha
     
     indirect enum State: StateType {
         /// The state machine hasn't started.
@@ -379,6 +380,8 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
                     stateMachine.tryEvent(.startCreateChildRoomFlow, userInfo: space)
                 case .displayTransferOwnership(let roomProxy):
                     stateMachine.tryEvent(.presentTransferOwnership, userInfo: roomProxy)
+                case .displayMatchaNotes:
+                    presentMatchaNotes(spaceID: spaceRoomListProxy.id)
                 }
             }
             .store(in: &cancellables)
@@ -392,6 +395,24 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
                 self?.actionsSubject.send(.finished)
             }
         }
+    }
+    
+    /// matcha: the space's notes, pushed above it; one flow at a time, since it opens asynchronously.
+    private func presentMatchaNotes(spaceID: String) {
+        guard spaceNotesFlowCoordinator == nil else { return }
+        let flowCoordinator = SpaceNotesFlowCoordinator(entry: .space(spaceID: spaceID, documentID: nil),
+                                                        navigationStackCoordinator: navigationStackCoordinator,
+                                                        contextFactory: flowParameters.userSession.matchaService.notesContextFactory)
+        flowCoordinator.actionsPublisher
+            .sink { [weak self] action in
+                switch action {
+                case .finished:
+                    self?.spaceNotesFlowCoordinator = nil
+                }
+            }
+            .store(in: &cancellables)
+        spaceNotesFlowCoordinator = flowCoordinator
+        flowCoordinator.start(animated: true)
     }
     
     private func presentJoinSpaceScreen() {

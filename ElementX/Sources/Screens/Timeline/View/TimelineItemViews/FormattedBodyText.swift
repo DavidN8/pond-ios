@@ -60,7 +60,7 @@ struct FormattedBodyText: View {
         layout
             .tint(.compound.textLinkExternal)
             .accessibilityElement(children: containsDetails ? .contain : .ignore)
-            .accessibilityLabel(Text(attributedString))
+            .accessibilityLabel(Text(attributedString.replacingEmoticonsWithAltText)) // matcha: custom emoji read as `:code:`
     }
     
     /// The attributed components laid out for the bubbles timeline style.

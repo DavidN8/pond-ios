@@ -747,6 +747,51 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         }
     }
     
+    // MARK: - Raw events (matcha)
+    
+    func sendRawEvent(type: String, contentJSON: String) async -> Result<String, RoomProxyError> {
+        await room.sendRawEvent(type: type, contentJSON: contentJSON)
+    }
+    
+    func sendRawStateEvent(type: String, stateKey: String, contentJSON: String) async -> Result<String, RoomProxyError> {
+        await room.sendRawStateEvent(type: type, stateKey: stateKey, contentJSON: contentJSON)
+    }
+    
+    func stateEventsJSON(type: String) async -> Result<[String: String], RoomProxyError> {
+        await room.stateEventsJSON(type: type)
+    }
+    
+    func storedStateEventID(type: String, stateKey: String) async -> Result<String?, RoomProxyError> {
+        await room.storedStateEventID(type: type, stateKey: stateKey)
+    }
+    
+    func fetchStateEventContentJSON(type: String, stateKey: String) async -> Result<String?, RoomProxyError> {
+        await room.fetchStateEventContentJSON(type: type, stateKey: stateKey)
+    }
+    
+    func fetchRelatedEventsJSON(eventID: String, relation: RawRelationType, from: String?, limit: Int) async -> Result<RawEventsPage, RoomProxyError> {
+        await room.fetchRelatedEventsJSON(eventID: eventID, relation: relation, from: from, limit: limit)
+    }
+    
+    func rawMessageLikeEvents(types: Set<String>) -> AsyncStream<String> {
+        room.rawMessageLikeEvents(types: types)
+    }
+    
+    func eventTypesTimeline(types: Set<String>) async -> Result<TimelineProxyProtocol, RoomProxyError> {
+        await room.eventTypesTimeline(types: types)
+    }
+    
+    // MARK: - Members (matcha)
+    
+    func updatedMember(userID: String) async -> Result<RoomMemberProxyProtocol, RoomProxyError> {
+        do {
+            return try await .success(RoomMemberProxy(member: room.member(userId: userID)))
+        } catch {
+            MXLog.error("Failed retrieving member \(userID) with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
     // MARK: - Private
     
     private func subscribeToTypingNotifications() {

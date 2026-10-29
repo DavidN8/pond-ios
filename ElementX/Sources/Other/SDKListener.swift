@@ -268,6 +268,13 @@ nonisolated extension SDKListener: ThreadListPaginationStateListener where T == 
     }
 }
 
+// matcha: live raw events, see RawRoomEvents.swift.
+nonisolated extension SDKListener: RoomMessageLikeEventsListener where T == RoomMessageLikeEvent {
+    func onEvent(event: RoomMessageLikeEvent) {
+        onUpdateClosure(event)
+    }
+}
+
 // MARK: TimelineProxy
 
 nonisolated extension SDKListener: PaginationStatusListener where T == PaginationStatus {

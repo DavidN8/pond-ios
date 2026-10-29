@@ -16,6 +16,9 @@ struct EmojiPickerScreenCoordinatorParameters {
     let emojiProvider: EmojiProviderProtocol
     /// A continuation that yields the selected emoji.
     let continuation: EmojiPickerScreenContinuation
+    /// matcha: the room's custom emoji packs, offered before the emoji, for reactions.
+    var loadCustomEmojiPacks: CustomEmojiPacksLoader?
+    var mediaProvider: MediaProviderProtocol? // matcha: for the custom emoji's images
 }
 
 enum EmojiPickerScreenCoordinatorAction {
@@ -36,7 +39,9 @@ final class EmojiPickerScreenCoordinator: CoordinatorProtocol {
         viewModel = EmojiPickerScreenViewModel(mode: parameters.mode,
                                                selectedEmojis: parameters.selectedEmojis,
                                                emojiProvider: parameters.emojiProvider,
-                                               continuation: parameters.continuation)
+                                               continuation: parameters.continuation,
+                                               loadCustomEmojiPacks: parameters.loadCustomEmojiPacks, // matcha
+                                               mediaProvider: parameters.mediaProvider) // matcha
     }
     
     func start() {

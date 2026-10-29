@@ -13,10 +13,9 @@ struct SeparatorRoomTimelineView: View {
     
     var body: some View {
         Text(timelineItem.timestamp.formattedDateSeparator())
-            .font(.compound.bodySMSemibold)
-            .foregroundColor(.compound.textPrimary)
-            .frame(maxWidth: .infinity)
+            .matchaDatePill() // matcha
             .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, 36.0)
             .padding(.vertical, 8.0)
     }
@@ -27,5 +26,6 @@ struct SeparatorRoomTimelineView_Previews: PreviewProvider, TestablePreview {
         let item = SeparatorRoomTimelineItem(id: .virtual(uniqueID: .init("Separator")),
                                              timestamp: .mock)
         SeparatorRoomTimelineView(timelineItem: item)
+            .background(MatchaColors.chatWallpaper)
     }
 }

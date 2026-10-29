@@ -37,6 +37,7 @@ class UITestsAppCoordinator: AppCoordinatorProtocol, SecureWindowManagerDelegate
         MXLog.configure(currentTarget: "uitests")
         
         appSettings = AppSettings.volatile()
+        appSettings.matchaWorkspacesEnabled = false // matcha: upstream's UI tests expect upstream's tabs and menus.
         
         let analyticsClient = AnalyticsClientMock()
         analyticsClient.isRunning = false

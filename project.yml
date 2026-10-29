@@ -12,7 +12,7 @@ options:
   groupSortPosition: bottom
   createIntermediateGroups: true
   deploymentTarget:
-    iOS: '18.5'
+    iOS: '26.0'
     macOS: '14.5'
   groupOrdering:
   - order:
@@ -69,16 +69,21 @@ include:
 - path: Components/MapLibre/MapLibreInterface/SupportingFiles/target.yml
 - path: Components/MapLibre/MapLibreShim/SupportingFiles/target.yml
 - path: Components/SDKMocks/SupportingFiles/target.yml
+# matcha: a free Apple ID build that leaves out what a personal team can't sign, see MATCHA_IOS.md.
+- path: Components/Variants/PersonalTeam/personal-team.yml
+  enable: ${MATCHA_PERSONAL_TEAM}
 # - path: MyAppVariant/override.yml
 
 packages:
   # Element/Matrix dependencies
   MatrixRustSDK:
-    url: https://github.com/element-hq/matrix-rust-components-swift
-    exactVersion: 26.10.24
+    path: matrix-rust-components-swift
     # path: ../matrix-rust-sdk
   Compound:
     path: compound-ios
+  # matcha: the Matcha wire protocol, see MatchaProtocol/README.md.
+  MatchaProtocol:
+    path: MatchaProtocol
   ElementCall:
     url: https://github.com/element-hq/element-call-ios
     exactVersion: 0.1.0-rc.11

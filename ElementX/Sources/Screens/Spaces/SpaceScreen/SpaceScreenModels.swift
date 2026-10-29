@@ -19,6 +19,7 @@ enum SpaceScreenViewModelAction {
     case displaySpaceSettings(roomProxy: JoinedRoomProxyProtocol)
     case addExistingChildren
     case displayCreateChildRoomFlow(space: SpaceServiceRoom)
+    case displayMatchaNotes // matcha
 }
 
 struct SpaceScreenViewState: BindableState {
@@ -36,6 +37,8 @@ struct SpaceScreenViewState: BindableState {
     var canEditRolesAndPermissions = false
     var canEditSecurityAndPrivacy = false
     var canEditChildren = false
+    /// matcha: the space's notes row and menu item.
+    var showsMatchaNotes = false
     
     var editMode: EditMode = .inactive
     var editModeSelectedIDs: Set<String> = []
@@ -80,4 +83,5 @@ enum SpaceScreenViewAction {
     case removeSelectedChildren
     case confirmRemoveSelectedChildren
     case finishManagingChildren
+    case matchaNotes // matcha
 }

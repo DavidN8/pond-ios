@@ -52,6 +52,8 @@ struct MentionSuggestionItemView: View {
             RoomAvatarImage(avatar: avatar, avatarSize: .room(on: .completionSuggestions), mediaProvider: mediaProvider)
         case .room(let room):
             RoomAvatarImage(avatar: room.avatar, avatarSize: .room(on: .completionSuggestions), mediaProvider: mediaProvider)
+        case .customEmoji(let emoji): // matcha
+            CustomEmojiImage(url: emoji.url, size: Avatars.Size.user(on: .completionSuggestions).value, mediaProvider: mediaProvider)
         }
     }
 }

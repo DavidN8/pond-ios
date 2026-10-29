@@ -64,9 +64,11 @@ class RoomThreadListProxy: RoomThreadListServiceProxyProtocol {
     // MARK: - Private
     
     private func updateItems() {
-        let items = threadListService.items().map { item in
+        let items = threadListService.items().compactMap { item -> RoomThreadListItem? in
+            // matcha: the Matcha room store reaches every thread root, so one without details is skipped rather than fatal.
             guard let rootMessageDetails = buildMessageDetails(item.rootEvent) else {
-                fatalError("This should never fail™")
+                MXLog.warning("Skipping the thread \(item.rootEvent.eventId), its root has no details.")
+                return nil
             }
             
             let latestMessageDetails = buildMessageDetails(item.latestEvent)
@@ -74,7 +76,8 @@ class RoomThreadListProxy: RoomThreadListServiceProxyProtocol {
             return RoomThreadListItem(id: item.rootEvent.eventId,
                                       rootMessageDetails: rootMessageDetails,
                                       latestMessageDetails: latestMessageDetails,
-                                      numberOfReplies: UInt(item.numReplies))
+                                      numberOfReplies: UInt(item.numReplies),
+                                      matcha: MatchaListedThread(item)) // matcha
         }
         
         itemsSubject.send(items)

@@ -22,6 +22,10 @@ struct SpaceScreen: View {
                 if !isEditModeActive {
                     SpaceHeaderView(spaceServiceRoom: context.viewState.space,
                                     mediaProvider: context.mediaProvider)
+                    
+                    if context.viewState.showsMatchaNotes { // matcha
+                        SpaceNotesRow { context.send(viewAction: .matchaNotes) }
+                    }
                 }
                 
                 if context.viewState.shouldShowEmptyState {
@@ -146,6 +150,12 @@ struct SpaceScreen: View {
                         if let roomProxy = context.viewState.roomProxy {
                             Button { context.send(viewAction: .displayMembers(roomProxy: roomProxy)) } label: {
                                 Label(L10n.screenSpaceMenuActionMembers, icon: \.user)
+                            }
+                        }
+                        
+                        if context.viewState.showsMatchaNotes { // matcha
+                            Button { context.send(viewAction: .matchaNotes) } label: {
+                                Label { Text(UntranslatedL10n.commonMatchaDocs) } icon: { CompoundIcon(asset: Asset.Images.matchaNotes) }
                             }
                         }
                         

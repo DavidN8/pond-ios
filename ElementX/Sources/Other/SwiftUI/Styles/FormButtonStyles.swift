@@ -17,12 +17,12 @@ struct FormActionButtonStyle: ButtonStyle {
         VStack(spacing: 4) {
             configuration.label
                 .buttonStyle(.plain)
-                .foregroundColor(.compound.iconSecondary)
+                .foregroundColor(.compound.iconAccentPrimary) // matcha: WhatsApp's green action tiles
                 .scaledFrame(size: 24)
             
             Text(title)
                 .foregroundColor(.compound.textPrimary)
-                .font(.compound.bodyLG)
+                .font(.compound.bodySMSemibold) // matcha
                 .textCase(.none)
         }
         .padding(.horizontal, 4)

@@ -1,0 +1,1706 @@
+{
+    "op": "kanban.board",
+    "description": "A room's threads and board cards, built like MatchaRoomStore.buildSnapshot. events are the room's Matcha events, newest first: card revisions, metadata patches, bootstrap replies and thread replies (which stand in for the replies read per thread). threads is the SDK thread list with each root's body and sender, the latest reply's sender and the latest activity time. legacyArchive holds com.matchahoneylatte.thread_archive state by thread root id. directMembers is empty outside direct chats. Threads are ordered by latest activity, newest first; cards keep standalone cards first, then one card per thread.",
+    "cases": [
+        {
+            "name": "every thread projects to exactly one card named after the thread",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e79:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "thread-x",
+                            "title": "Stale title",
+                            "description": "Notes",
+                            "column": "doing",
+                            "archived": false,
+                            "thread_id": "$t1:example.org",
+                            "due_at": 1767225600000,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e80:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-2",
+                            "title": "Standalone",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e81:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-old",
+                            "title": "Earlier",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "thread_id": "$t1:example.org",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e82:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "name": "Thread name",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$t1:example.org"
+                            }
+                        }
+                    }
+                ],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Thread one root",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 300
+                    },
+                    {
+                        "id": "$t2:example.org",
+                        "rootBody": "New thread",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 200
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Thread name",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "explicit",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org"
+                        ]
+                    },
+                    {
+                        "id": "$t2:example.org",
+                        "name": "New thread",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "c-2",
+                        "title": "Standalone",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": null,
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    },
+                    {
+                        "id": "thread-x",
+                        "title": "Thread name",
+                        "description": "Notes",
+                        "status": "doing",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": 1767225600000,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": true,
+                        "earlierCardIds": [
+                            "c-old"
+                        ],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    },
+                    {
+                        "id": "thread-ad34327d9d25d1019d416301ac67ce60cf0b42bbebbf4f6750b34e048f6076b8",
+                        "title": "New thread",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t2:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": false,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "the newest revision of a card wins",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e83:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "New title",
+                            "description": "",
+                            "column": "done",
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e84:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "Old title",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    }
+                ],
+                "threads": [],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [],
+                "cards": [
+                    {
+                        "id": "c-1",
+                        "title": "New title",
+                        "description": "",
+                        "status": "done",
+                        "archived": false,
+                        "threadId": null,
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org",
+                            "@bob:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "an invalid newest revision is dropped and the older valid one wins",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e85:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "Broken",
+                            "description": "",
+                            "column": "blocked",
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e86:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "Valid",
+                            "description": "",
+                            "column": "doing",
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    }
+                ],
+                "threads": [],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [],
+                "cards": [
+                    {
+                        "id": "c-1",
+                        "title": "Valid",
+                        "description": "",
+                        "status": "doing",
+                        "archived": false,
+                        "threadId": null,
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "a card unlinked from its thread gives way to the thread's card, so ids stay unique",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e87:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "thread-1a6241720addeba2c51d726cd97880a77cc898d3c0fc0867d98bc31c5f97dda5",
+                            "title": "Unlinked",
+                            "description": "Notes",
+                            "column": "done",
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e88:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-2",
+                            "title": "Other",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    }
+                ],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Thread",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 10
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Thread",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "thread-1a6241720addeba2c51d726cd97880a77cc898d3c0fc0867d98bc31c5f97dda5",
+                        "title": "Thread",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": false,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    },
+                    {
+                        "id": "c-2",
+                        "title": "Other",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": null,
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "an explicit thread restore wins over an archived card",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e89:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "Task",
+                            "description": "",
+                            "column": "todo",
+                            "archived": true,
+                            "thread_id": "$t1:example.org",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e90:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$t1:example.org"
+                            }
+                        }
+                    }
+                ],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Root",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 1
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Root",
+                        "archived": false,
+                        "archiveExplicit": true,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "c-1",
+                        "title": "Root",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "without an explicit thread archive the card decides",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e91:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "Task",
+                            "description": "",
+                            "column": "todo",
+                            "archived": true,
+                            "thread_id": "$t1:example.org",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    }
+                ],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Root",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 1
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Root",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "c-1",
+                        "title": "Root",
+                        "description": "",
+                        "status": "todo",
+                        "archived": true,
+                        "threadId": "$t1:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "the legacy archive state brings in a thread and archives its card",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [],
+                "threads": [],
+                "legacyArchive": {
+                    "$t3:example.org": true
+                },
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t3:example.org",
+                        "name": "$t3:example.org",
+                        "archived": true,
+                        "archiveExplicit": true,
+                        "nameSource": "event_id",
+                        "hasHiddenFirstReply": false,
+                        "participants": []
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "thread-e57e4a9bd3510997e04178076d6d57dd67104c0a5a99484fb1af8d8ee02e479a",
+                        "title": "$t3:example.org",
+                        "description": "",
+                        "status": "todo",
+                        "archived": true,
+                        "threadId": "$t3:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": false,
+                        "earlierCardIds": [],
+                        "participants": [],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "a legacy false does not bring in a thread",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [],
+                "threads": [],
+                "legacyArchive": {
+                    "$t3:example.org": false
+                },
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [],
+                "cards": []
+            }
+        },
+        {
+            "name": "a thread missing from the thread list is named after its card",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e92:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-9",
+                            "title": "Card title",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "thread_id": "$t2:example.org",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    }
+                ],
+                "threads": [],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t2:example.org",
+                        "name": "Card title",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": []
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "c-9",
+                        "title": "Card title",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t2:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "threads are ordered by latest activity",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Older",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 100
+                    },
+                    {
+                        "id": "$t2:example.org",
+                        "rootBody": "Newer",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 300
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t2:example.org",
+                        "name": "Newer",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org"
+                        ]
+                    },
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Older",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "thread-ad34327d9d25d1019d416301ac67ce60cf0b42bbebbf4f6750b34e048f6076b8",
+                        "title": "Newer",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t2:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": false,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    },
+                    {
+                        "id": "thread-1a6241720addeba2c51d726cd97880a77cc898d3c0fc0867d98bc31c5f97dda5",
+                        "title": "Older",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": false,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "a revision of another board is ignored",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e93:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "Elsewhere",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$other-board"
+                            }
+                        }
+                    }
+                ],
+                "threads": [],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [],
+                "cards": []
+            }
+        },
+        {
+            "name": "a task hidden from the room is not shown to someone it does not involve",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e94:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "Private",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "thread_id": "$t1:example.org",
+                            "show_to_room": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "m.room.message",
+                        "event_id": "$e95:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "msgtype": "m.text",
+                            "body": "reply",
+                            "m.relates_to": {
+                                "rel_type": "m.thread",
+                                "event_id": "$t1:example.org",
+                                "is_falling_back": true,
+                                "m.in_reply_to": {
+                                    "event_id": "$t1:example.org"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Root",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 5
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@carol:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Root",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org",
+                            "@bob:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "c-1",
+                        "title": "Root",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": false,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org",
+                            "@bob:example.org"
+                        ],
+                        "isShownToViewer": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "a task hidden from the room is shown to a replier",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e96:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "Private",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "thread_id": "$t1:example.org",
+                            "show_to_room": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "m.room.message",
+                        "event_id": "$e97:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "msgtype": "m.text",
+                            "body": "reply",
+                            "m.relates_to": {
+                                "rel_type": "m.thread",
+                                "event_id": "$t1:example.org",
+                                "is_falling_back": true,
+                                "m.in_reply_to": {
+                                    "event_id": "$t1:example.org"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Root",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 5
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@bob:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Root",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org",
+                            "@bob:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "c-1",
+                        "title": "Root",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": false,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org",
+                            "@bob:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "a task hidden from the room is shown to the thread's latest sender",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e98:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "Private",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "thread_id": "$t1:example.org",
+                            "show_to_room": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    }
+                ],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Root",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": "@dan:example.org",
+                        "lastActivity": 5
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@dan:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Root",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org",
+                            "@dan:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "c-1",
+                        "title": "Root",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": false,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org",
+                            "@dan:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "redacted replies and senders that are not user ids are not participants",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "m.room.message",
+                        "event_id": "$e99:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "msgtype": "m.text",
+                            "body": "reply",
+                            "m.relates_to": {
+                                "rel_type": "m.thread",
+                                "event_id": "$t1:example.org",
+                                "is_falling_back": true,
+                                "m.in_reply_to": {
+                                    "event_id": "$t1:example.org"
+                                }
+                            }
+                        },
+                        "unsigned": {
+                            "redacted_because": {
+                                "type": "m.room.redaction"
+                            }
+                        }
+                    },
+                    {
+                        "type": "m.room.message",
+                        "event_id": "$e100:example.org",
+                        "sender": "not a user id",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "msgtype": "m.text",
+                            "body": "reply",
+                            "m.relates_to": {
+                                "rel_type": "m.thread",
+                                "event_id": "$t1:example.org",
+                                "is_falling_back": true,
+                                "m.in_reply_to": {
+                                    "event_id": "$t1:example.org"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "type": "m.room.message",
+                        "event_id": "$e101:example.org",
+                        "sender": "@carol:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "msgtype": "m.text",
+                            "body": "reply",
+                            "m.relates_to": {
+                                "rel_type": "m.thread",
+                                "event_id": "$t1:example.org",
+                                "is_falling_back": true,
+                                "m.in_reply_to": {
+                                    "event_id": "$t1:example.org"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "type": "m.reaction",
+                        "event_id": "$e102:example.org",
+                        "sender": "@dan:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "m.relates_to": {
+                                "rel_type": "m.annotation",
+                                "event_id": "$t1:example.org",
+                                "key": "👍"
+                            }
+                        }
+                    }
+                ],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Root",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 5
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@alice:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Root",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org",
+                            "@carol:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "thread-1a6241720addeba2c51d726cd97880a77cc898d3c0fc0867d98bc31c5f97dda5",
+                        "title": "Root",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": false,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org",
+                            "@carol:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "a standalone card involves the authors of its revisions without a thread",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e103:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "legacy",
+                            "title": "Legacy",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "show_to_room": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e104:example.org",
+                        "sender": "@carol:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "legacy",
+                            "title": "Legacy",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "show_to_room": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e105:example.org",
+                        "sender": "@dan:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "other",
+                            "title": "Other",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "thread_id": "$t1:example.org",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    }
+                ],
+                "threads": [],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@carol:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Other",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": []
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "legacy",
+                        "title": "Legacy",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": null,
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": false,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@bob:example.org",
+                            "@carol:example.org"
+                        ],
+                        "isShownToViewer": true
+                    },
+                    {
+                        "id": "other",
+                        "title": "Other",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "in a direct chat its members are involved in every task",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e106:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "Private",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "show_to_room": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    }
+                ],
+                "threads": [],
+                "legacyArchive": {},
+                "directMembers": [
+                    "@me:example.org",
+                    "@bob:example.org"
+                ],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [],
+                "cards": [
+                    {
+                        "id": "c-1",
+                        "title": "Private",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": null,
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": false,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org",
+                            "@bob:example.org",
+                            "@me:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "the hidden bootstrap reply marks its thread and its sender takes part",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e107:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "name": "Plan",
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.thread",
+                                "event_id": "$t1:example.org",
+                                "is_falling_back": true,
+                                "m.in_reply_to": {
+                                    "event_id": "$t1:example.org"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "type": "m.room.message",
+                        "event_id": "$e108:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "msgtype": "m.text",
+                            "body": "reply",
+                            "m.relates_to": {
+                                "rel_type": "m.thread",
+                                "event_id": "$t2:example.org",
+                                "is_falling_back": true,
+                                "m.in_reply_to": {
+                                    "event_id": "$t2:example.org"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Plan",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 2
+                    },
+                    {
+                        "id": "$t2:example.org",
+                        "rootBody": "Unnamed",
+                        "rootSender": "@carol:example.org",
+                        "latestSender": null,
+                        "lastActivity": 1
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@alice:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Plan",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": true,
+                        "participants": [
+                            "@alice:example.org"
+                        ]
+                    },
+                    {
+                        "id": "$t2:example.org",
+                        "name": "Unnamed",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@bob:example.org",
+                            "@carol:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "thread-1a6241720addeba2c51d726cd97880a77cc898d3c0fc0867d98bc31c5f97dda5",
+                        "title": "Plan",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": false,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    },
+                    {
+                        "id": "thread-ad34327d9d25d1019d416301ac67ce60cf0b42bbebbf4f6750b34e048f6076b8",
+                        "title": "Unnamed",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t2:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": true,
+                        "hasRevision": false,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@bob:example.org",
+                            "@carol:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "deadlines and reminder requests travel with the thread's card",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e109:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "thread-x",
+                            "title": "Card",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "thread_id": "$t1:example.org",
+                            "due_at": 1767225600000,
+                            "reminder_requested": {
+                                "event_id": "$cmd:example.org",
+                                "at": 1767222000000
+                            },
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    }
+                ],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Root",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 1
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@me:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Root",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "thread-x",
+                        "title": "Root",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": 1767225600000,
+                        "reminderRequested": {
+                            "eventId": "$cmd:example.org",
+                            "at": 1767222000000
+                        },
+                        "showToRoom": true,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "a user id is read by code point: a combining mark may follow its @",
+            "input": {
+                "rootId": "$board:example.org",
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.kanban.card",
+                        "event_id": "$e96:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "card_id": "c-1",
+                            "title": "Private",
+                            "description": "",
+                            "column": "todo",
+                            "archived": false,
+                            "thread_id": "$t1:example.org",
+                            "show_to_room": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "m.room.message",
+                        "event_id": "$e97:example.org",
+                        "sender": "@́bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "msgtype": "m.text",
+                            "body": "reply",
+                            "m.relates_to": {
+                                "rel_type": "m.thread",
+                                "event_id": "$t1:example.org",
+                                "is_falling_back": true,
+                                "m.in_reply_to": {
+                                    "event_id": "$t1:example.org"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "rootBody": "Root",
+                        "rootSender": "@alice:example.org",
+                        "latestSender": null,
+                        "lastActivity": 5
+                    }
+                ],
+                "legacyArchive": {},
+                "directMembers": [],
+                "viewer": "@́bob:example.org"
+            },
+            "expect": {
+                "threads": [
+                    {
+                        "id": "$t1:example.org",
+                        "name": "Root",
+                        "archived": false,
+                        "archiveExplicit": false,
+                        "nameSource": "root_body",
+                        "hasHiddenFirstReply": false,
+                        "participants": [
+                            "@alice:example.org",
+                            "@́bob:example.org"
+                        ]
+                    }
+                ],
+                "cards": [
+                    {
+                        "id": "c-1",
+                        "title": "Root",
+                        "description": "",
+                        "status": "todo",
+                        "archived": false,
+                        "threadId": "$t1:example.org",
+                        "dueAt": null,
+                        "reminderRequested": null,
+                        "showToRoom": false,
+                        "hasRevision": true,
+                        "earlierCardIds": [],
+                        "participants": [
+                            "@alice:example.org",
+                            "@́bob:example.org"
+                        ],
+                        "isShownToViewer": true
+                    }
+                ]
+            }
+        }
+    ]
+}

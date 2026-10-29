@@ -12,6 +12,7 @@ import WysiwygComposer
 
 struct RoomAttachmentPicker: View {
     @ObservedObject var context: ComposerToolbarViewModel.Context
+    @Environment(\.matchaChatBar) private var matchaChatBar // matcha
     
     var body: some View {
         // Use a menu instead of the popover/sheet shown in Figma because overriding the colour scheme
@@ -43,6 +44,20 @@ struct RoomAttachmentPicker: View {
                 Label(L10n.screenRoomAttachmentSourcePoll, icon: \.polls)
             }
             .accessibilityIdentifier(A11yIdentifiers.roomScreen.attachmentPickerPoll)
+            
+            if let matchaChatBar { // matcha: a new task in this chat, as Android's attach sheet, and stickers
+                Button {
+                    matchaChatBar.send(viewAction: .newTask)
+                } label: {
+                    Label(UntranslatedL10n.screenMatchaRoomAttachTask, icon: \.checkCircle)
+                }
+                
+                Button {
+                    matchaChatBar.send(viewAction: .stickers)
+                } label: {
+                    Label(UntranslatedL10n.screenMatchaStickersTitle, icon: \.sticker)
+                }
+            }
             
             if context.viewState.isLocationSharingEnabled {
                 Button {

@@ -25,6 +25,8 @@ struct ThreadTimelineScreenCoordinatorParameters {
     let composerDraftService: ComposerDraftServiceProtocol
     let timelineControllerFactory: TimelineControllerFactoryProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
+    /// matcha: the chip bar with this thread selected, and the Matcha top bar actions; nil while the chat shows no Matcha features.
+    var chatBar: ChatBarViewModel?
 }
 
 enum ThreadTimelineScreenCoordinatorAction {
@@ -46,6 +48,8 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
     private let timelineViewModel: TimelineViewModelProtocol
     private var composerViewModel: ComposerToolbarViewModelProtocol
     private let userSettings: UserSettings
+    let chatBar: ChatBarViewModel? // matcha
+    private let timelineController: TimelineControllerProtocol // matcha
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -56,6 +60,8 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
     
     init(parameters: ThreadTimelineScreenCoordinatorParameters) {
         userSettings = parameters.userSession.userSettings
+        chatBar = parameters.chatBar // matcha
+        timelineController = parameters.timelineController // matcha
         
         viewModel = ThreadTimelineScreenViewModel(roomProxy: parameters.roomProxy, userSession: parameters.userSession)
         
@@ -70,6 +76,8 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
                                               emojiProvider: parameters.emojiProvider,
                                               linkMetadataProvider: parameters.linkMetadataProvider,
                                               timelineControllerFactory: parameters.timelineControllerFactory)
+        // matcha: the top bar says who is typing.
+        (timelineViewModel as? TimelineViewModel)?.state.isTypingRowHidden = chatBar != nil
         
         let wysiwygViewModel = WysiwygComposerViewModel(minHeight: ComposerConstant.minHeight,
                                                         maxCompressedHeight: ComposerConstant.maxHeight,
@@ -164,6 +172,11 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
     func stop() {
         composerViewModel.stop()
         viewModel.stop()
+        // matcha: leaving a thread marks it read up to its latest event, as leaving the chat does for the chat. The receipts sent
+        // while scrolling only reach visible replies, never a named thread's hidden first reply.
+        if chatBar != nil {
+            Task { [timelineController] in await timelineController.markAsRead() }
+        }
     }
     
     func toPresentable() -> AnyView {
@@ -171,7 +184,8 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
         
         return AnyView(ThreadTimelineScreen(context: viewModel.context,
                                             timelineContext: timelineViewModel.context,
-                                            composerToolbar: composerToolbar))
+                                            composerToolbar: composerToolbar,
+                                            chatBarContext: chatBar?.context)) // matcha
     }
     
     func focusOnEvent(eventID: String) {

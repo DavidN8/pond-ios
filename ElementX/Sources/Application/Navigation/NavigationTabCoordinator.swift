@@ -32,6 +32,9 @@ import SwiftUI
         /// Provide the tab's split coordinator in here to have the tab bar automatically hidden
         /// when pushing a child into the split view's details on iPhone/compact iPad.
         weak var navigationSplitCoordinator: NavigationSplitCoordinator?
+        /// matcha: a tab that is a plain stack (the Notes tab), whose tab bar hides on iPhone while a screen is pushed onto it.
+        /// A pushed screen's own `toolbar(.hidden, for: .tabBar)` loses to the tab's visibility below.
+        weak var navigationStackCoordinator: NavigationStackCoordinator?
         
         init(tag: Tag, title: String, icon: KeyPath<CompoundIcons, Image>, selectedIcon: KeyPath<CompoundIcons, Image>, isSearch: Bool = false, accessibilityIdentifier: String? = nil) {
             self.tag = tag
@@ -43,7 +46,7 @@ import SwiftUI
         }
         
         func barVisibility(in horizontalSizeClass: UserInterfaceSizeClass?) -> Visibility {
-            if horizontalSizeClass == .compact, navigationSplitCoordinator?.detailCoordinator != nil {
+            if horizontalSizeClass == .compact, navigationSplitCoordinator?.detailCoordinator != nil || navigationStackCoordinator?.stackCoordinators.isEmpty == false { // matcha: the stack
                 // Whilst we support pushing screens on the stack in the sidebarCoordinator, in practice
                 // we never do that, so simply checking that the detailCoordinator exists is enough.
                 .hidden
@@ -67,6 +70,9 @@ import SwiftUI
             module.coordinator
         }
     }
+    
+    /// matcha: off while the Matcha tabs show, whose bar always shows every tab, as Android's.
+    var minimizesTabBarOnScroll = true
     
     fileprivate var tabModules = [TabModule]() {
         didSet {
@@ -411,7 +417,7 @@ private struct NavigationTabCoordinatorView<Tag: Hashable>: View {
                 .accessibilityIdentifier(module.details.accessibilityIdentifier ?? "")
             }
         }
-        .backportTabBarMinimizeBehaviorOnScrollDown()
+        .tabBarMinimizeBehavior(navigationTabCoordinator.minimizesTabBarOnScroll ? .onScrollDown : .never) // matcha
         .backportTabViewSearchActivationOnSearchTabSelection()
         .introspect(.tabView, on: .supportedVersions, customize: configureAppearance)
     }
@@ -421,6 +427,11 @@ private struct NavigationTabCoordinatorView<Tag: Hashable>: View {
         standardAppearance.stackedLayoutAppearance.normal.badgeBackgroundColor = .compound.iconAccentPrimary // iPhone Portrait
         standardAppearance.compactInlineLayoutAppearance.normal.badgeBackgroundColor = .compound.iconAccentPrimary // iPhone Landscape
         standardAppearance.inlineLayoutAppearance.normal.badgeBackgroundColor = .compound.iconAccentPrimary // iPadOS 17 (doesn't work for 18+)
+        // matcha: the selected tab in Matcha green, as Android's; the tab bar's tintColor alone stays ink under Liquid Glass.
+        for itemAppearance in [standardAppearance.stackedLayoutAppearance, standardAppearance.compactInlineLayoutAppearance, standardAppearance.inlineLayoutAppearance] {
+            itemAppearance.selected.iconColor = .compound.iconAccentPrimary
+            itemAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.compound.iconAccentPrimary]
+        }
         tabBarController.tabBar.standardAppearance = standardAppearance
     }
 }

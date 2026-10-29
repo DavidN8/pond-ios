@@ -1,0 +1,983 @@
+{
+    "op": "docs.assemble",
+    "description": "Reassembles the updates the frames among events (oldest first) complete, like RoomDocumentSession: events are taken once by event id (events without one are skipped), updates once by sender and update id. updates lists the complete updates in the order they complete (base64). missing lists committed updates still missing parts (the document is then incomplete and read-only); pending lists parts without a commit yet. error invalid_update or decrypt_error stops the document.",
+    "cases": [
+        {
+            "name": "a single update frame",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e149:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [
+                    "AQID"
+                ],
+                "missing": [],
+                "pending": []
+            }
+        },
+        {
+            "name": "chunks in order, then the commit",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e150:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 0,
+                            "data": "AQI=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e151:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 1,
+                            "data": "AwQ=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e152:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 2,
+                            "data": "BQ==",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e153:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "commit",
+                            "chunks": 3,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [
+                    "AQIDBAU="
+                ],
+                "missing": [],
+                "pending": []
+            }
+        },
+        {
+            "name": "the commit first and chunks out of order",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e154:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "commit",
+                            "chunks": 3,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e155:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 2,
+                            "data": "BQ==",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e156:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 0,
+                            "data": "AQI=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e157:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 1,
+                            "data": "AwQ=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [
+                    "AQIDBAU="
+                ],
+                "missing": [],
+                "pending": []
+            }
+        },
+        {
+            "name": "the same event twice is read once",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$dup:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$dup:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [
+                    "AQID"
+                ],
+                "missing": [],
+                "pending": []
+            }
+        },
+        {
+            "name": "an update sent again under new event ids is applied once",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e158:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e159:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [
+                    "AQID"
+                ],
+                "missing": [],
+                "pending": []
+            }
+        },
+        {
+            "name": "an update applied once ignores later frames with its id, whatever they hold",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e160:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e161:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "BAUG",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [
+                    "AQID"
+                ],
+                "missing": [],
+                "pending": []
+            }
+        },
+        {
+            "name": "the same update id from two senders is two updates",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e162:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e163:example.org",
+                        "sender": "@carol:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "BAUG",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [
+                    "AQID",
+                    "BAUG"
+                ],
+                "missing": [],
+                "pending": []
+            }
+        },
+        {
+            "name": "a part sent again identically is fine",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e164:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 0,
+                            "data": "AQI=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e165:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 0,
+                            "data": "AQI=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e166:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 1,
+                            "data": "AwQ=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e167:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 2,
+                            "data": "BQ==",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e168:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "commit",
+                            "chunks": 3,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [
+                    "AQIDBAU="
+                ],
+                "missing": [],
+                "pending": []
+            }
+        },
+        {
+            "name": "a part sent again differently is invalid",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e169:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 0,
+                            "data": "AQI=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e170:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 0,
+                            "data": "CQk=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "error": "invalid_update"
+        },
+        {
+            "name": "frames of one update disagreeing on the chunk count are invalid",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e171:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 0,
+                            "data": "AQI=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e172:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 4,
+                            "chunk": 1,
+                            "data": "AQ==",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "error": "invalid_update"
+        },
+        {
+            "name": "a committed update missing a part is missing",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e173:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 0,
+                            "data": "AQI=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e174:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 2,
+                            "data": "BQ==",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e175:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "commit",
+                            "chunks": 3,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [],
+                "missing": [
+                    "@bob:example.org:u-1"
+                ],
+                "pending": []
+            }
+        },
+        {
+            "name": "parts without a commit are pending",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e176:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 0,
+                            "data": "AQI=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e177:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "chunk",
+                            "chunks": 3,
+                            "chunk": 1,
+                            "data": "AwQ=",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [],
+                "missing": [],
+                "pending": [
+                    "@bob:example.org:u-1"
+                ]
+            }
+        },
+        {
+            "name": "an undecryptable frame stops the document",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e178:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "m.room.encrypted",
+                        "event_id": "$e179:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "algorithm": "m.megolm.v1.aes-sha2",
+                            "ciphertext": "x",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "error": "decrypt_error"
+        },
+        {
+            "name": "an undecryptable event related to something else is ignored",
+            "input": {
+                "events": [
+                    {
+                        "type": "m.room.encrypted",
+                        "event_id": "$e180:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "algorithm": "m.megolm.v1.aes-sha2",
+                            "ciphertext": "x",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$other"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [],
+                "missing": [],
+                "pending": []
+            }
+        },
+        {
+            "name": "an invalid frame stops the document",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e181:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e182:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 2,
+                            "doc": "main",
+                            "update_id": "u-2",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "error": "invalid_update"
+        },
+        {
+            "name": "unrelated events are skipped",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e183:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "0f8fad5b-d9cb-469f-a165-70867728950e",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "m.room.message",
+                        "event_id": "$e184:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "msgtype": "m.text",
+                            "body": "hi"
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "event_id": "$e185:example.org",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [
+                    "AQID"
+                ],
+                "missing": [],
+                "pending": []
+            }
+        },
+        {
+            "name": "a frame without an event id is skipped",
+            "input": {
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.docs.update",
+                        "sender": "@bob:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "doc": "main",
+                            "update_id": "u-1",
+                            "kind": "update",
+                            "chunks": 1,
+                            "chunk": 0,
+                            "data": "AQID",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$create:example.org"
+                            }
+                        }
+                    }
+                ],
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "updates": [],
+                "missing": [],
+                "pending": []
+            }
+        }
+    ]
+}

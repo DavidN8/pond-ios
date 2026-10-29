@@ -223,7 +223,7 @@ class TimelineInteractionHandler {
             analyticsService.trackInteraction(name: .PinnedMessageListViewTimeline)
             guard let eventID = itemID.eventID else { return }
             actionsSubject.send(.viewInRoomTimeline(eventID: eventID))
-        case .downloadMedia:
+        case .downloadMedia, .seenBy, .remindMe: // matcha: Seen by and Remind me open their sheets from the timeline view model.
             break // Handled inline in the media preview screen.
         case .translate:
             guard let messageTimelineItem = timelineItem as? EventBasedMessageTimelineItemProtocol else { return }
@@ -272,6 +272,10 @@ class TimelineInteractionHandler {
             editType = text.isEmpty ? .addCaption : .editCaption
         default:
             text = messageTimelineItem.body
+        }
+        
+        if userSettings.app.matchaWorkspacesEnabled { // matcha: the rich text editor drops custom emoji images, so they're edited as `:code:`.
+            htmlText = htmlText.map(CustomEmojiMessages.editableHTML)
         }
         
         // Always update the mode first and then the text so that the composer has time to save the text draft
@@ -610,7 +614,9 @@ class TimelineInteractionHandler {
         
         emojiPickerCancellable = Task { [weak self] in
             for await emoji in stream {
-                await self?.timelineController.toggleReaction(emoji, to: eventOrTransactionID)
+                guard let self else { return }
+                // matcha: a custom emoji's reaction carries its shortcode.
+                await CustomEmojiReactions.toggle(emoji, to: eventOrTransactionID, roomID: roomProxy.id, timelineController: timelineController, userSession: userSession)
             }
         }
         .asCancellable()

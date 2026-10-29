@@ -32,30 +32,31 @@ struct TimelineItemMenu: View {
                 .background(Color.compound.bgSubtlePrimary)
             
             ScrollView {
-                VStack(alignment: .leading, spacing: 0.0) {
+                // matcha: a reactions capsule and grouped cards on the grouped background, as iOS menus.
+                VStack(alignment: .leading, spacing: 16) {
                     if !actions.reactions.isEmpty {
                         reactionsSection
-                            .padding(.bottom, 8.0)
-                        
-                        Divider()
-                            .background(Color.compound.bgSubtlePrimary)
+                            .padding(.vertical, 4)
+                            .background(.compound.bgCanvasDefaultLevel1, in: .capsule)
                     }
                     
                     if !actions.actions.isEmpty {
                         viewsForActions(actions.actions)
-                        
-                        Divider()
-                            .background(Color.compound.bgSubtlePrimary)
+                            .matchaMenuCard()
                     }
                     
-                    viewsForActions(actions.secondaryActions)
+                    if !actions.secondaryActions.isEmpty { // matcha: no empty card
+                        viewsForActions(actions.secondaryActions)
+                            .matchaMenuCard()
+                    }
                 }
+                .padding([.horizontal, .bottom], 16)
             }
         }
         .accessibilityIdentifier(A11yIdentifiers.roomScreen.timelineItemActionMenu)
         .presentationSizing(.page)
         .presentationDetents([.medium, .large])
-        .presentationBackground(Color.compound.bgCanvasDefault)
+        .presentationBackground(Color.compound.bgSubtleSecondaryLevel0) // matcha
         .presentationDragIndicator(.visible)
     }
     
@@ -128,7 +129,7 @@ struct TimelineItemMenu: View {
                 if horizontalSizeClass == .compact {
                     LinearGradient(stops: [.init(color: .clear, location: 0.0),
                                            .init(color: .clear, location: 0.9),
-                                           .init(color: .compound.bgCanvasDefault, location: 1.0)],
+                                           .init(color: .compound.bgCanvasDefaultLevel1, location: 1.0)], // matcha: the capsule's fill
                                    startPoint: .leading,
                                    endPoint: .trailing)
                         .allowsHitTesting(false)
@@ -175,7 +176,7 @@ struct TimelineItemMenu: View {
     }
     
     private func reactionBackgroundColor(for emoji: String) -> Color {
-        hasReacted(to: emoji) ? .compound.bgActionPrimaryRest : .clear
+        hasReacted(to: emoji) ? .compound.bgAccentSubtle : .clear // matcha: tonal, like a selected chip
     }
     
     private func viewsForActions(_ actions: [TimelineItemMenuAction]) -> some View {

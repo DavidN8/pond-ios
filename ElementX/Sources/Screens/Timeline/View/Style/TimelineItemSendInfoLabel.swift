@@ -17,7 +17,8 @@ extension View {
                               context: TimelineViewModel.Context) -> some View {
         modifier(TimelineItemSendInfoModifier(sendInfo: .init(timelineItem: timelineItem,
                                                               adjustedDeliveryStatus: adjustedDeliveryStatus,
-                                                              hasContentScanningFailure: hasContentScanningFailure),
+                                                              hasContentScanningFailure: hasContentScanningFailure,
+                                                              isRead: context.viewState.matchaIsRead(timelineItem.id)), // matcha
                                               // A gallery announces this when entering it instead.
                                               isAccessibilityHidden: timelineItem is GalleryRoomTimelineItem,
                                               context: context))
@@ -109,14 +110,20 @@ private struct TimelineItemSendInfoLabel: View {
         HStack(spacing: 4) {
             Text(sendInfo.localizedString)
             
+            if let tick = sendInfo.tick { // matcha
+                MatchaTickIcon(tick: tick)
+            }
+            
             if let statusIcon {
                 CompoundIcon(statusIcon, size: .xSmall, relativeTo: .compound.bodyXS)
+                    .foregroundStyle(sendInfo.foregroundStyle) // matcha: only the icon carries the status colour
                     .accessibilityLabel(statusIconAccessibilityLabel ?? "")
                     .accessibilityHidden(statusIconAccessibilityLabel == nil)
             }
         }
         .font(.compound.bodyXS)
-        .foregroundStyle(sendInfo.foregroundStyle)
+        // matcha: no red text in bubbles, and textSecondary is 3.21:1 on the dark own bubble (WHATSAPP_DESIGN §3.3, §7.2).
+        .foregroundStyle(MatchaColors.bubbleMetaText)
     }
 }
 
@@ -140,6 +147,7 @@ private struct TimelineItemSendInfo {
     let localizedString: String
     var status: Status?
     let layoutType: LayoutType
+    var tick: MatchaTick? // matcha
     
     var foregroundStyle: Color {
         switch status {
@@ -158,9 +166,11 @@ private struct TimelineItemSendInfo {
 private extension TimelineItemSendInfo {
     init(timelineItem: EventBasedTimelineItemProtocol,
          adjustedDeliveryStatus: TimelineItemDeliveryStatus?,
-         hasContentScanningFailure: Bool = false) {
+         hasContentScanningFailure: Bool = false,
+         isRead: Bool = false) {
         itemID = timelineItem.id
         localizedString = timelineItem.localizedSendInfo
+        tick = MatchaTick(timelineItem: timelineItem, deliveryStatus: adjustedDeliveryStatus, isRead: isRead) // matcha
         
         status = if case .sendingFailed = adjustedDeliveryStatus {
             .sendingFailed
@@ -262,6 +272,13 @@ struct TimelineItemSendInfoLabel_Previews: PreviewProvider, TestablePreview {
                                                       localizedString: "09:47 AM",
                                                       status: .encryptionForwarder(.test),
                                                       layoutType: .horizontal()))
+            // matcha: the ticks of your own messages.
+            ForEach([MatchaTick.sending, .sent, .read], id: \.self) { tick in
+                TimelineItemSendInfoLabel(sendInfo: .init(itemID: .randomEvent,
+                                                          localizedString: "09:47 AM",
+                                                          layoutType: .horizontal(),
+                                                          tick: tick))
+            }
         }
     }
 }

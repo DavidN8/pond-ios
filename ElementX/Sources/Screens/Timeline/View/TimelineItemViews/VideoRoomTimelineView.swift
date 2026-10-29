@@ -90,7 +90,7 @@ struct VideoRoomTimelineView: View {
     
     var placeholder: some View {
         Rectangle()
-            .foregroundStyle(timelineItem.isOutgoing ? .compound._bgBubbleOutgoing : .compound._bgBubbleIncoming)
+            .foregroundStyle(timelineItem.isOutgoing ? MatchaColors.bubbleOutgoing : MatchaColors.bubbleIncoming) // matcha
             .opacity(0.3)
     }
 }

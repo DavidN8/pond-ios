@@ -1,0 +1,120 @@
+{
+    "op": "thread_metadata.bootstrap_root",
+    "description": "The thread root of a hidden bootstrap reply, or null for any other event. Threads with one subtract it from their reply count.",
+    "cases": [
+        {
+            "name": "the bootstrap reply names its root",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e31:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "Plan",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.thread",
+                            "event_id": "$root:example.org",
+                            "is_falling_back": true,
+                            "m.in_reply_to": {
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    }
+                }
+            },
+            "expect": "$root:example.org"
+        },
+        {
+            "name": "a metadata patch is not a bootstrap reply",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e32:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "Plan",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a regular thread reply is not a bootstrap reply",
+            "input": {
+                "event": {
+                    "type": "m.room.message",
+                    "event_id": "$e33:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "msgtype": "m.text",
+                        "body": "hi",
+                        "m.relates_to": {
+                            "rel_type": "m.thread",
+                            "event_id": "$root:example.org",
+                            "is_falling_back": true,
+                            "m.in_reply_to": {
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a metadata event without a relation is not a bootstrap reply",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e34:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "Plan"
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "redaction is not checked: a redacted event keeps no content on the server",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e35:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "Plan",
+                        "m.relates_to": {
+                            "rel_type": "m.thread",
+                            "event_id": "$root:example.org",
+                            "is_falling_back": true,
+                            "m.in_reply_to": {
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    },
+                    "unsigned": {
+                        "redacted_because": {
+                            "type": "m.room.redaction"
+                        }
+                    }
+                }
+            },
+            "expect": "$root:example.org"
+        }
+    ]
+}

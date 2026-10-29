@@ -28,6 +28,8 @@ struct RoomScreenCoordinatorParameters {
     let composerDraftService: ComposerDraftServiceProtocol
     let timelineControllerFactory: TimelineControllerFactoryProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
+    /// matcha: the chip bar and the Matcha top bar actions; nil while the chat shows no Matcha features.
+    var chatBar: ChatBarViewModel?
 }
 
 enum RoomScreenCoordinatorAction {
@@ -53,9 +55,10 @@ enum RoomScreenCoordinatorAction {
 
 final class RoomScreenCoordinator: CoordinatorProtocol {
     private var roomViewModel: RoomScreenViewModelProtocol
-    private var timelineViewModel: TimelineViewModelProtocol
+    private(set) var timelineViewModel: TimelineViewModelProtocol // matcha: read by tests
     private var composerViewModel: ComposerToolbarViewModelProtocol
     private let userSettings: UserSettings
+    let chatBar: ChatBarViewModel? // matcha
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -66,6 +69,7 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
     
     init(parameters: RoomScreenCoordinatorParameters) {
         userSettings = parameters.userSession.userSettings
+        chatBar = parameters.chatBar // matcha
         
         var selectedPinnedEventID: String?
         if let focussedEvent = parameters.focussedEvent {
@@ -90,6 +94,12 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                                               emojiProvider: parameters.emojiProvider,
                                               linkMetadataProvider: parameters.linkMetadataProvider,
                                               timelineControllerFactory: parameters.timelineControllerFactory)
+        if let chatBar { // matcha
+            (timelineViewModel as? TimelineViewModel)?.showMatchaThreads(of: chatBar.context.viewState.chat.store)
+            (timelineViewModel as? TimelineViewModel)?.state.isTypingRowHidden = true
+        }
+        // matcha: the timeline's Join button follows the room's call rule, which hides calls in Matcha.
+        (timelineViewModel as? TimelineViewModel)?.state.isCallJoiningHidden = !roomViewModel.context.viewState.isCallingEnabled
         
         let wysiwygViewModel = WysiwygComposerViewModel(minHeight: ComposerConstant.minHeight,
                                                         maxCompressedHeight: ComposerConstant.maxHeight,
@@ -247,7 +257,8 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
         
         return AnyView(RoomScreen(context: roomViewModel.context,
                                   timelineContext: timelineViewModel.context,
-                                  composerToolbar: composerToolbar))
+                                  composerToolbar: composerToolbar,
+                                  chatBarContext: chatBar?.context)) // matcha
     }
 }
 

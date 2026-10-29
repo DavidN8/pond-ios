@@ -126,6 +126,10 @@ enum A11yIdentifiers {
         let chats = "home_tabs-chats"
         let spaces = "home_tabs-spaces"
         let search = "home_tabs-search"
+        // matcha: the tabs while the workspaces are on
+        let tasks = "home_tabs-tasks"
+        let notes = "home_tabs-notes"
+        let channels = "home_tabs-channels"
     }
     
     struct InviteUsersScreen {

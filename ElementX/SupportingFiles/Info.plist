@@ -83,7 +83,6 @@
 		<string>audio</string>
 		<string>fetch</string>
 		<string>processing</string>
-		<string>voip</string>
 		<string>location</string>
 	</array>
 	<key>UILaunchScreen</key>
@@ -115,14 +114,6 @@
 	<string>$(APP_GROUP_IDENTIFIER)</string>
 	<key>baseBundleIdentifier</key>
 	<string>$(BASE_BUNDLE_IDENTIFIER)</string>
-	<key>classicAppDeepLinkURL</key>
-	<string>$(CLASSIC_APP_DEEP_LINK_URL)</string>
-	<key>classicAppGroupIdentifier</key>
-	<string>$(CLASSIC_APP_GROUP_IDENTIFIER)</string>
-	<key>classicAppKeychainAccessGroupIdentifier</key>
-	<string>$(CLASSIC_APP_KEYCHAIN_ACCESS_GROUP_IDENTIFIER)</string>
-	<key>classicAppKeychainServiceIdentifier</key>
-	<string>$(CLASSIC_APP_KEYCHAIN_SERVICE_IDENTIFIER)</string>
 	<key>isNightlyBuild</key>
 	<string>$(IS_NIGHTLY_BUILD)</string>
 	<key>keychainAccessGroupIdentifier</key>

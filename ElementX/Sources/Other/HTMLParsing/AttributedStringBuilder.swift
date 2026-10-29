@@ -20,6 +20,8 @@ nonisolated protocol MentionBuilderProtocol: Sendable {
     func handleEventOnRoomAliasMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, eventID: String, roomAlias: String)
     func handleEventOnRoomIDMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, eventID: String, roomID: String)
     func handleAllUsersMention(for attributedString: NSMutableAttributedString, in range: NSRange)
+    /// matcha: an MSC2545 custom emoji, `range` holding its alt text.
+    func handleEmoticon(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, altText: String)
 }
 
 nonisolated extension NSAttributedString.Key {
@@ -289,7 +291,10 @@ nonisolated struct AttributedStringBuilder: AttributedStringBuilderProtocol {
                 }
                 
             case "img":
-                if let alt = try? childElement.attr("alt"), !alt.isEmpty {
+                if let emoticon = Emoticons.emoticon(childElement) { // matcha: a custom emoji, drawn by the mention builder
+                    content = NSMutableAttributedString(string: emoticon.text)
+                    mentionBuilder.handleEmoticon(for: content, in: NSRange(location: 0, length: content.length), url: emoticon.url, altText: emoticon.text)
+                } else if let alt = try? childElement.attr("alt"), !alt.isEmpty {
                     content = NSMutableAttributedString(string: "[img: \(alt)]")
                 } else {
                     content = NSMutableAttributedString(string: "[img]")

@@ -13,7 +13,7 @@ import SwiftUI
 struct CallInviteRoomTimelineView: View {
     var body: some View {
         Label {
-            Text(L10n.screenRoomTimelineLegacyCall)
+            Text(L10n.screenRoomTimelineLegacyCall.replacingOccurrences(of: "Element X", with: InfoPlistReader.main.productionAppName))
         } icon: {
             CompoundIcon(\.voiceCallSolid, size: .medium, relativeTo: .compound.bodyMD)
         }

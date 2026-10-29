@@ -11,6 +11,8 @@ import SwiftUI
 struct RoomThreadListScreenCoordinatorParameters {
     let threadListServiceProxy: RoomThreadListServiceProxyProtocol
     let mediaProvider: MediaProviderProtocol
+    /// matcha: the chat's Matcha store, for thread names and the Active and Archived chips; nil while the chat shows no Matcha features.
+    var matchaStore: MatchaRoomStore?
 }
 
 enum RoomThreadListScreenCoordinatorAction {
@@ -29,7 +31,8 @@ final class RoomThreadListScreenCoordinator: CoordinatorProtocol {
     
     init(parameters: RoomThreadListScreenCoordinatorParameters) {
         viewModel = RoomThreadListScreenViewModel(threadListServiceProxy: parameters.threadListServiceProxy,
-                                                  mediaProvider: parameters.mediaProvider)
+                                                  mediaProvider: parameters.mediaProvider,
+                                                  matchaThreadsPublisher: parameters.matchaStore?.snapshotPublisher.map(\.threadInfos).eraseToAnyPublisher()) // matcha
     }
     
     func start() {

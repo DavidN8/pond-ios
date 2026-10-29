@@ -1,0 +1,107 @@
+{
+    "op": "kanban.board_pointer",
+    "description": "The board root event id from the com.matchahoneylatte.kanban state content (empty state key), or null.",
+    "cases": [
+        {
+            "name": "a version 1 pointer",
+            "input": {
+                "content": {
+                    "version": 1,
+                    "event_id": "$root:example.org"
+                }
+            },
+            "expect": "$root:example.org"
+        },
+        {
+            "name": "extra fields are ignored",
+            "input": {
+                "content": {
+                    "version": 1,
+                    "event_id": "$root",
+                    "extra": true
+                }
+            },
+            "expect": "$root"
+        },
+        {
+            "name": "version 2 is not read",
+            "input": {
+                "content": {
+                    "version": 2,
+                    "event_id": "$root"
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a string version is not read",
+            "input": {
+                "content": {
+                    "version": "1",
+                    "event_id": "$root"
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "the version is required",
+            "input": {
+                "content": {
+                    "event_id": "$root"
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "the event id must start with $",
+            "input": {
+                "content": {
+                    "version": 1,
+                    "event_id": "root"
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "the event id must be a string",
+            "input": {
+                "content": {
+                    "version": 1,
+                    "event_id": 5
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "empty content",
+            "input": {
+                "content": {}
+            },
+            "expect": null
+        },
+        {
+            "name": "no content",
+            "input": {
+                "content": null
+            },
+            "expect": null
+        },
+        {
+            "name": "content that is not an object",
+            "input": {
+                "content": "$root"
+            },
+            "expect": null
+        },
+        {
+            "name": "a combining mark may follow the $ of the event id",
+            "input": {
+                "content": {
+                    "version": 1,
+                    "event_id": "$́root:example.org"
+                }
+            },
+            "expect": "$́root:example.org"
+        }
+    ]
+}

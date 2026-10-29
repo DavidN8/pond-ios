@@ -37,8 +37,13 @@ enum EmojiPickerScreenViewAction {
 struct EmojiPickerEmojiCategoryViewData: Identifiable {
     let id: String
     let emojis: [EmojiPickerEmojiViewData]
+    /// matcha: a custom emoji pack's name.
+    var packName: String?
     
     var name: String {
+        if let packName { // matcha
+            return packName
+        }
         switch id {
         case "people":
             return L10n.emojiPickerCategoryPeople
@@ -68,4 +73,6 @@ struct EmojiPickerEmojiCategoryViewData: Identifiable {
 struct EmojiPickerEmojiViewData: Identifiable {
     var id: String
     let value: String
+    /// matcha: a custom emoji's `:code:`; its `value`, the reaction key, is the image's mxc URL.
+    var customEmojiName: String?
 }

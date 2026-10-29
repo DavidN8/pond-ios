@@ -96,7 +96,7 @@ struct MediaFileRoomTimelineContent: View {
                     .font(.compound.bodyLG)
                 Text(fileDescription)
                     .font(.compound.bodySM)
-                    .foregroundStyle(.compound.textSecondary)
+                    .foregroundStyle(MatchaColors.bubbleSecondaryText) // matcha
             }
             .font(.compound.bodyLG)
             .foregroundStyle(.compound.textPrimary)

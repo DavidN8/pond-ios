@@ -174,12 +174,29 @@ final class RoomSummaryProviderTests {
         #expect(dynamicEntriesController.addOnePageCallsCount == 0)
     }
     
+    @Test
+    func theFirstNotificationSettingsChangeRebuildsTheRooms() async throws { // matcha
+        // Given a provider with a room, whose notification settings haven't changed yet.
+        let notificationSettings = NotificationSettingsProxyMock(with: .init())
+        setup(notificationSettings: notificationSettings)
+        let room = try #require(try await loadRooms(count: 1).first)
+        #expect(room.latestEventCallsCount == 1)
+        
+        // When the first change arrives (a chat row's Mute, or the push rules' first sync after a relaunch).
+        let rebuilt = deferFulfillment(roomSummaryProvider.roomListPublisher) { _ in room.latestEventCallsCount == 2 }
+        notificationSettings.callbacks.send(.settingsDidChange)
+        
+        // Then the room's summary should be built again, picking up its new notification mode.
+        try await rebuilt.fulfill()
+    }
+    
     // MARK: - Helpers
     
     private func setup(isLowPriorityFilterEnabled: Bool = false,
                        includesOnlyJoinedRooms: Bool = false,
                        roomListPageSize: UInt32 = 100,
-                       setsRoomList: Bool = true) {
+                       setsRoomList: Bool = true,
+                       notificationSettings: NotificationSettingsProxyMock = NotificationSettingsProxyMock(with: .init())) { // matcha
         userSettings = UserSettings.mock()
         userSettings.app.lowPriorityFilterEnabled = isLowPriorityFilterEnabled
         
@@ -195,7 +212,7 @@ final class RoomSummaryProviderTests {
                                                   name: "Test",
                                                   includesOnlyJoinedRooms: includesOnlyJoinedRooms,
                                                   roomListPageSize: roomListPageSize,
-                                                  notificationSettings: NotificationSettingsProxyMock(with: .init()),
+                                                  notificationSettings: notificationSettings,
                                                   userSettings: userSettings)
         
         dynamicEntriesController = RoomListDynamicEntriesControllerSDKMock()
@@ -211,7 +228,8 @@ final class RoomSummaryProviderTests {
         }
     }
     
-    private func loadRooms(count: Int) async throws {
+    @discardableResult // matcha
+    private func loadRooms(count: Int) async throws -> [RoomSDKMock] {
         let listener = try #require(roomList.entriesWithDynamicAdaptersPageSizeListenerReceivedArguments?.listener)
         let rooms = (0..<count).map { index in
             let room = RoomSDKMock()
@@ -225,5 +243,6 @@ final class RoomSummaryProviderTests {
         let deferred = deferFulfillment(roomSummaryProvider.roomListPublisher) { $0.count == count }
         listener.onUpdate(roomEntriesUpdate: [.append(values: rooms)])
         try await deferred.fulfill()
+        return rooms
     }
 }

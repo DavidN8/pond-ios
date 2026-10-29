@@ -42,6 +42,8 @@ struct AuthenticationStartLogo: View {
                                                           isOnGradient: isOnGradient))
         } else {
             appLogoImage
+                .resizable() // matcha: POND's logo is a 1254 px PNG where Element's was a 110 pt PDF
+                .frame(width: 110, height: 110) // matcha
                 .modifier(AuthenticationBrandLogoModifier(scale: 1,
                                                           hideBrandChrome: hideBrandChrome,
                                                           isOnGradient: isOnGradient))

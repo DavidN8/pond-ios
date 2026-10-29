@@ -19,6 +19,7 @@ nonisolated struct RoomMemberProxyMockConfiguration {
     var isIgnored = false
     
     var powerLevel = RoomPowerLevel(value: 0)
+    var isServiceMember = false // matcha: read by the timeline's read ticks
 }
 
 extension RoomMemberProxyMock {
@@ -35,6 +36,7 @@ extension RoomMemberProxyMock {
         isIgnored = configuration.isIgnored
         
         powerLevel = configuration.powerLevel
+        isServiceMember = configuration.isServiceMember // matcha
     }
     
     /// Mocks

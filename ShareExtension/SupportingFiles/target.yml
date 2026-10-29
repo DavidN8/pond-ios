@@ -73,6 +73,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: ShareExtension
+        TARGETED_DEVICE_FAMILY: "1" # matcha: as the app
         PRODUCT_DISPLAY_NAME: $(APP_DISPLAY_NAME)
         PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.shareextension
         MARKETING_VERSION: $(MARKETING_VERSION)

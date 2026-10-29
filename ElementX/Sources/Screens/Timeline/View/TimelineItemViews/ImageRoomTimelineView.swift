@@ -87,7 +87,7 @@ struct ImageRoomTimelineView: View {
     
     private var placeholder: some View {
         Rectangle()
-            .foregroundColor(timelineItem.isOutgoing ? .compound._bgBubbleOutgoing : .compound._bgBubbleIncoming)
+            .foregroundColor(timelineItem.isOutgoing ? MatchaColors.bubbleOutgoing : MatchaColors.bubbleIncoming) // matcha
             .opacity(0.3)
     }
 }

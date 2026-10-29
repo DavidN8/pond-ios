@@ -18,6 +18,7 @@ struct RoomHeaderView: View {
     
     let roomName: String
     var roomSubtitle: String?
+    var isRoomSubtitleTyping = false // matcha: who is typing, in the accent colour
     let roomAvatar: RoomAvatar
     var dmRecipientDetails = DMRecipientDetails()
     var roomHistorySharingState: RoomHistorySharingState?
@@ -59,7 +60,7 @@ struct RoomHeaderView: View {
                     Text(roomSubtitle)
                         .lineLimit(1)
                         .font(.compound.bodyXS)
-                        .foregroundStyle(.compound.textSecondary)
+                        .foregroundStyle(isRoomSubtitleTyping ? .compound.textActionAccent : .compound.textSecondary) // matcha
                 }
             }
         }

@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import MatchaProtocol // matcha
 import MatrixRustSDK
 import UIKit
 import UniformTypeIdentifiers
@@ -203,7 +204,8 @@ nonisolated struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                              isOutgoing: isOutgoing,
                              isEditable: eventItemProxy.isEditable,
                              canBeRepliedTo: eventItemProxy.canBeRepliedTo,
-                             shouldBoost: eventItemProxy.shouldBoost,
+                             // matcha: a message of only custom emoji and emoji is big too.
+                             shouldBoost: eventItemProxy.shouldBoost || Emoticons.isEmoticonsOnly(html: textMessageContent.formatted?.body ?? ""),
                              sender: eventItemProxy.sender,
                              content: buildTextTimelineItemContent(textMessageContent),
                              properties: .init(replyDetails: buildTimelineItemReplyDetails(messageLikeContent.inReplyTo),
@@ -829,6 +831,12 @@ nonisolated struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
         case .pending:
             return .loading
         case .ready(let content, let senderID, let senderProfile, _, _):
+            // matcha: a named thread's hidden first reply has nothing to show; the Matcha summary names the thread once read.
+            if case .msgLike(let messageLikeContent) = content, case .other(let eventType) = messageLikeContent.kind,
+               eventType.description == MatchaConfig.eventThreadMetadata {
+                return .loading
+            }
+            
             let sender = TimelineItemSender(senderID: senderID, senderProfile: senderProfile)
             
             let latestEventContent: TimelineEventContent = switch content {

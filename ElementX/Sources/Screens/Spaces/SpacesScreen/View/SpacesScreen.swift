@@ -15,9 +15,8 @@ struct SpacesScreen: View {
     var body: some View {
         mainContent
             .navigationTitle(L10n.screenSpaceListTitle)
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large) // matcha: large titles on root tabs (plan decision 10)
             .toolbar { toolbar }
-            .toolbarRole(Compound.supportsGlass ? .editor : .automatic)
             .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
             .toolbarBloom(hasSearchBar: false)
     }
@@ -93,8 +92,7 @@ struct SpacesScreen: View {
     
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        // Use the title placement on iOS 26 to match the chats tab and fix a weird animation.
-        ToolbarItem(placement: Compound.supportsGlass ? .title : .navigationBarLeading) {
+        ToolbarItem(placement: .navigationBarLeading) { // matcha: as on the Chats tab
             AvatarSettingsButton(userProfile: context.viewState.userProfile,
                                  mediaProvider: context.mediaProvider) {
                 context.send(viewAction: .showSettings)
@@ -102,15 +100,6 @@ struct SpacesScreen: View {
             .buttonStyle(.borderless)
         }
         .backportSharedBackgroundVisibility(.hidden)
-        
-        // No need to hide the title on iOS 26, as we use the .title placement for the settings
-        // button to workaround a weird liquid glass transition.
-        if #unavailable(iOS 26) {
-            ToolbarItem(placement: .principal) {
-                // Hides the navigationTitle (which is set for the navigation stack label).
-                Text("").accessibilityHidden(true)
-            }
-        }
         
         ToolbarItem(placement: .primaryAction) {
             Button {
@@ -120,6 +109,7 @@ struct SpacesScreen: View {
                     .accessibilityHidden(true)
             }
             .accessibilityLabel(L10n.actionCreateSpace)
+            .matchaProminentToolbarButton() // matcha
         }
     }
 }

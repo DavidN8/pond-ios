@@ -83,6 +83,14 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "CallNotificationRoomTimelineView_Previews")
     }
 
+    func testChannelsScreen() async throws {
+        try await performAccessibilityAudit(named: "ChannelsScreen_Previews")
+    }
+
+    func testChatBarView() async throws {
+        try await performAccessibilityAudit(named: "ChatBarView_Previews")
+    }
+
     func testChatsSpaceFilterCell() async throws {
         try await performAccessibilityAudit(named: "ChatsSpaceFilterCell_Previews")
     }
@@ -119,6 +127,14 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "CreateRoom_Previews")
     }
 
+    func testCustomEmojiSending() async throws {
+        try await performAccessibilityAudit(named: "CustomEmojiSending_Previews")
+    }
+
+    func testCustomEmoji() async throws {
+        try await performAccessibilityAudit(named: "CustomEmoji_Previews")
+    }
+
     func testDeactivateAccountScreen() async throws {
         try await performAccessibilityAudit(named: "DeactivateAccountScreen_Previews")
     }
@@ -129,6 +145,10 @@ extension AccessibilityTests {
 
     func testEditRoomAddressScreen() async throws {
         try await performAccessibilityAudit(named: "EditRoomAddressScreen_Previews")
+    }
+
+    func testEmojiPackScreen() async throws {
+        try await performAccessibilityAudit(named: "EmojiPackScreen_Previews")
     }
 
     func testEmojiPickerScreenHeaderView() async throws {
@@ -359,6 +379,42 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "MapLibreStaticMapView_Previews")
     }
 
+    func testMarkdownPreview() async throws {
+        try await performAccessibilityAudit(named: "MarkdownPreview_Previews")
+    }
+
+    func testMatchaBubbleTail() async throws {
+        try await performAccessibilityAudit(named: "MatchaBubbleTail_Previews")
+    }
+
+    func testMatchaChatBannerView() async throws {
+        try await performAccessibilityAudit(named: "MatchaChatBannerView_Previews")
+    }
+
+    func testMatchaChatToolbar() async throws {
+        try await performAccessibilityAudit(named: "MatchaChatToolbar_Previews")
+    }
+
+    func testMatchaIcons() async throws {
+        try await performAccessibilityAudit(named: "MatchaIcons_Previews")
+    }
+
+    func testMatchaPalette() async throws {
+        try await performAccessibilityAudit(named: "MatchaPalette_Previews")
+    }
+
+    func testMatchaStyle() async throws {
+        try await performAccessibilityAudit(named: "MatchaStyle_Previews")
+    }
+
+    func testMatchaSwipeActions() async throws {
+        try await performAccessibilityAudit(named: "MatchaSwipeActions_Previews")
+    }
+
+    func testMatchaThreadSummaryView() async throws {
+        try await performAccessibilityAudit(named: "MatchaThreadSummaryView_Previews")
+    }
+
     func testMatrixUserPermalink() async throws {
         try await performAccessibilityAudit(named: "MatrixUserPermalink_Previews")
     }
@@ -401,6 +457,22 @@ extension AccessibilityTests {
 
     func testMultiAccountAnnouncementView() async throws {
         try await performAccessibilityAudit(named: "MultiAccountAnnouncementView_Previews")
+    }
+
+    func testNoteEditorScreen() async throws {
+        try await performAccessibilityAudit(named: "NoteEditorScreen_Previews")
+    }
+
+    func testNoteNameSheet() async throws {
+        try await performAccessibilityAudit(named: "NoteNameSheet_Previews")
+    }
+
+    func testNotesComponents() async throws {
+        try await performAccessibilityAudit(named: "NotesComponents_Previews")
+    }
+
+    func testNotesTabScreen() async throws {
+        try await performAccessibilityAudit(named: "NotesTabScreen_Previews")
     }
 
     func testNoticeRoomTimelineView() async throws {
@@ -513,6 +585,10 @@ extension AccessibilityTests {
 
     func testRedactedRoomTimelineView() async throws {
         try await performAccessibilityAudit(named: "RedactedRoomTimelineView_Previews")
+    }
+
+    func testRemindMeScreen() async throws {
+        try await performAccessibilityAudit(named: "RemindMeScreen_Previews")
     }
 
     func testReportContentScreen() async throws {
@@ -727,6 +803,18 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "SpaceHeaderView_Previews")
     }
 
+    func testSpaceNotesListScreen() async throws {
+        try await performAccessibilityAudit(named: "SpaceNotesListScreen_Previews")
+    }
+
+    func testSpaceNotesRow() async throws {
+        try await performAccessibilityAudit(named: "SpaceNotesRow_Previews")
+    }
+
+    func testSpaceNotesSetupScreen() async throws {
+        try await performAccessibilityAudit(named: "SpaceNotesSetupScreen_Previews")
+    }
+
     func testSpaceRemoveChildrenConfirmationView() async throws {
         try await performAccessibilityAudit(named: "SpaceRemoveChildrenConfirmationView_Previews")
     }
@@ -767,6 +855,10 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "StaticLocationSheet_Previews")
     }
 
+    func testStickerPickerScreen() async throws {
+        try await performAccessibilityAudit(named: "StickerPickerScreen_Previews")
+    }
+
     func testStickerRoomTimelineView() async throws {
         try await performAccessibilityAudit(named: "StickerRoomTimelineView_Previews")
     }
@@ -775,12 +867,32 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "SwipeRightAction_Previews")
     }
 
+    func testTaskEditorScreen() async throws {
+        try await performAccessibilityAudit(named: "TaskEditorScreen_Previews")
+    }
+
+    func testTaskRow() async throws {
+        try await performAccessibilityAudit(named: "TaskRow_Previews")
+    }
+
+    func testTasksBoardScreen() async throws {
+        try await performAccessibilityAudit(named: "TasksBoardScreen_Previews")
+    }
+
+    func testTasksTabScreen() async throws {
+        try await performAccessibilityAudit(named: "TasksTabScreen_Previews")
+    }
+
     func testTextRoomTimelineView() async throws {
         try await performAccessibilityAudit(named: "TextRoomTimelineView_Previews")
     }
 
     func testThreadDecorator() async throws {
         try await performAccessibilityAudit(named: "ThreadDecorator_Previews")
+    }
+
+    func testThreadNameSheetView() async throws {
+        try await performAccessibilityAudit(named: "ThreadNameSheetView_Previews")
     }
 
     func testTimelineDeliveryStatusView() async throws {

@@ -74,13 +74,14 @@ extension RoomSummary {
                      name: String,
                      isSpace: Bool = false,
                      isJoined: Bool = true,
-                     canonicalAlias: String? = nil) -> RoomSummary {
+                     canonicalAlias: String? = nil,
+                     isDirect: Bool = false) -> RoomSummary { // matcha: the Tasks tab's tests have direct chats
         RoomSummary(room: RoomSDKMock(.init()),
                     id: id,
                     joinRequestType: nil,
                     isJoined: isJoined,
                     name: name,
-                    isDirect: false,
+                    isDirect: isDirect,
                     isSpace: isSpace,
                     avatarURL: nil,
                     heroes: [],
@@ -98,7 +99,8 @@ extension RoomSummary {
                     activeCallIntent: nil,
                     isMarkedUnread: false,
                     isFavourite: false,
-                    isTombstoned: false)
+                    isTombstoned: false,
+                    isDM: isDirect) // matcha
     }
 }
 

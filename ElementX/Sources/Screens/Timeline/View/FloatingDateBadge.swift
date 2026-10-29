@@ -15,28 +15,12 @@ struct FloatingDateBadge: View {
     let dateText: String?
     var onTap: (() -> Void)?
     
-    @Environment(\.colorScheme) private var colorScheme: ColorScheme
-    
-    private var backgroundColor: Color {
-        switch colorScheme {
-        case .dark:
-            .compound.bgSubtlePrimary
-        default:
-            .compound.bgCanvasDefault
-        }
-    }
-    
     var body: some View {
         ZStack {
             if let dateText {
                 Button { onTap?() } label: {
                     Text(dateText)
-                        .font(.compound.bodySMSemibold)
-                        .foregroundColor(.compound.textPrimary)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(backgroundColor, in: .capsule)
-                        .shadow(color: Color(red: 0.11, green: 0.11, blue: 0.13).opacity(0.1), radius: 12, x: 0, y: 4)
+                        .matchaDatePill() // matcha: the day separator's pill
                 }
                 .buttonStyle(.plain)
                 .disabled(onTap == nil)

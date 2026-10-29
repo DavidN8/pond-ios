@@ -24,7 +24,7 @@ struct TimelineSenderAvatarView: View {
             .overlay {
                 Circle()
                     .inset(by: -1)
-                    .stroke(.compound.bgCanvasDefault, lineWidth: 2)
+                    .stroke(MatchaColors.chatWallpaper, lineWidth: 2) // matcha: the cut-out matches the wallpaper
             }
     }
 }

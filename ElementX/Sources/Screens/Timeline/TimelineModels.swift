@@ -129,6 +129,8 @@ struct TimelineViewState: BindableState {
     var canCurrentUserPin = false
     var canCurrentUserKick = false
     var canCurrentUserBan = false
+    /// matcha: Matcha is on and the room offers "Remind me".
+    var canRemind = false
     
     var hideTimelineMedia: Bool
     
@@ -164,6 +166,15 @@ struct TimelineViewState: BindableState {
     var mapTilerConfiguration: MapTilerConfiguration
     
     var stoppedLiveLocationIDs: Set<TimelineItemIdentifier> = []
+    
+    /// matcha: the chat's thread names and hidden replies by thread root id, for the bubble thread summaries.
+    var matchaThreads: [String: MatchaThreadInfo] = [:]
+    /// matcha: calls are hidden, so an ongoing call offers no Join button.
+    var isCallJoiningHidden = false
+    /// matcha: the chat's top bar says who is typing, so the timeline doesn't (WHATSAPP_DESIGN §3.3).
+    var isTypingRowHidden = false
+    /// matcha: what VoiceOver reads for custom emoji reactions, by mxc URL: `:code:` from the room's packs, or a generic name.
+    var customEmojiReactionLabels: [String: String] = [:]
     
     var bindings: TimelineViewStateBindings
 }
@@ -203,6 +214,9 @@ struct TimelineViewStateBindings {
     
     var showTranslation = false
     var textToBeTranslated: String?
+    
+    /// matcha: the open "Remind me" sheet.
+    var remindMeViewModel: RemindMeScreenViewModel?
 }
 
 /// The state of the multi-selection of messages.
@@ -314,6 +328,8 @@ struct TimelineState {
     var scrollToReadMarkerPublisher = PassthroughSubject<TimelineItemIdentifier.UniqueID, Never>()
     
     var itemsDictionary = OrderedDictionary<TimelineItemIdentifier.UniqueID, RoomTimelineItemViewState>()
+    /// matcha: your own messages every other member has read, for the double tick.
+    var matchaReadUniqueIDs: Set<TimelineItemIdentifier.UniqueID> = []
     
     var uniqueIDs: [TimelineItemIdentifier.UniqueID] {
         itemsDictionary.keys.elements
@@ -405,6 +421,7 @@ extension TimelineViewState {
               let attributedString = try? NSMutableAttributedString(formattedBody, including: \.elementX) else {
             return plainBody
         }
+        attributedString.replaceEmoticonsWithAltText() // matcha
         
         let range = NSRange(location: 0, length: attributedString.length)
         attributedString.enumerateAttributes(in: range) { attributes, range, _ in

@@ -183,6 +183,39 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func startLiveLocationShare(duration: Duration) async -> Result<String, RoomProxyError>
     func sendLiveLocation(geoURI: GeoURI) async -> Result<Void, RoomProxyError>
     func stopLiveLocationShare() async -> Result<Void, RoomProxyError>
+    
+    // MARK: - Raw events (matcha, see RawRoomEvents.swift)
+    
+    /// Sends a timeline event of any type, encrypted like a message in encrypted rooms, and returns its ID once the homeserver
+    /// accepted it. Unlike messages it bypasses the send queue, so it fails at once when offline.
+    func sendRawEvent(type: String, contentJSON: String) async -> Result<String, RoomProxyError>
+    /// Sends a state event of any type and returns its ID once the homeserver accepted it.
+    func sendRawStateEvent(type: String, stateKey: String, contentJSON: String) async -> Result<String, RoomProxyError>
+    /// The stored state events of a type as raw JSON content, keyed by state key. The sync stores only the custom state it asked
+    /// for, so an empty result doesn't prove there is none.
+    func stateEventsJSON(type: String) async -> Result<[String: String], RoomProxyError>
+    /// The ID of the stored state event of a type and state key, or nil when none is stored. A joined room always stores its
+    /// `m.room.create` event.
+    func storedStateEventID(type: String, stateKey: String) async -> Result<String?, RoomProxyError>
+    /// Fetches the content of one state event from the homeserver as raw JSON, or nil when the room has no such state (404).
+    /// Unlike `stateEventsJSON(type:)` it reads custom state the sync doesn't store.
+    func fetchStateEventContentJSON(type: String, stateKey: String) async -> Result<String?, RoomProxyError>
+    /// Fetches one page of at most `limit` events related to `eventID` by `relation` from the homeserver, newest first, as raw
+    /// event JSON, decrypted when possible (one that can't be comes back encrypted). Unlike timelines it includes custom event
+    /// types. `from` is the previous page's `nextBatch`, or nil for the newest page.
+    func fetchRelatedEventsJSON(eventID: String, relation: RawRelationType, from: String?, limit: Int) async -> Result<RawEventsPage, RoomProxyError>
+    /// New message-like events of `types` as they arrive, decrypted, as raw event JSON with `type`, `event_id`, `sender`,
+    /// `origin_server_ts` and `content`, until the stream is dropped or the task iterating it is cancelled.
+    func rawMessageLikeEvents(types: Set<String>) -> AsyncStream<String>
+    /// A live timeline of only `types`, threaded events included. Read each item's raw event with `EventTimelineItemProxy.originalJSON`,
+    /// never `debugInfo.originalJSON`, which `JSONSerialization` rewrites.
+    func eventTypesTimeline(types: Set<String>) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    
+    // MARK: - Members (matcha)
+    
+    /// One member as the SDK's store has it, which syncs keep current, without reloading every member as `updateMembers()` must
+    /// for `getMember(userID:)` to see a change. Fails when the user was never in the room.
+    func updatedMember(userID: String) async -> Result<RoomMemberProxyProtocol, RoomProxyError>
 }
 
 extension JoinedRoomProxyProtocol {

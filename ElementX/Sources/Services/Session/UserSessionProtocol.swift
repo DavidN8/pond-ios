@@ -30,6 +30,8 @@ protocol UserSessionProtocol: Sendable {
     /// Scans media content, `nil` when no content scanner is configured for the server.
     var contentScannerService: ContentScannerServiceProtocol? { get }
     var notificationService: NotificationServiceProtocol { get }
+    /// matcha: the Matcha room stores and the Tasks tab's rooms of this session.
+    var matchaService: MatchaService { get }
     
     var sessionSecurityStatePublisher: CurrentValuePublisher<SessionSecurityState, Never> { get }
     

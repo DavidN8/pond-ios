@@ -36,7 +36,8 @@ class SpaceScreenViewModel: SpaceScreenViewModelType, SpaceScreenViewModelProtoc
         
         super.init(initialViewState: SpaceScreenViewState(space: spaceRoomListProxy.spaceServiceRoomPublisher.value,
                                                           rooms: spaceRoomListProxy.spaceRoomsPublisher.value,
-                                                          selectedSpaceRoomID: selectedSpaceRoomPublisher.value),
+                                                          selectedSpaceRoomID: selectedSpaceRoomPublisher.value,
+                                                          showsMatchaNotes: userSession.userSettings.app.matchaWorkspacesEnabled), // matcha
                    mediaProvider: userSession.mediaProvider)
         
         spaceRoomListProxy.spaceServiceRoomPublisher
@@ -154,6 +155,8 @@ class SpaceScreenViewModel: SpaceScreenViewModelType, SpaceScreenViewModelProtoc
             }
         case .createChildRoom:
             Task { await createChildRoom() }
+        case .matchaNotes:
+            actionsSubject.send(.displayMatchaNotes)
         }
     }
     

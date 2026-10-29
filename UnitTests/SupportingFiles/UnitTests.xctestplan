@@ -27,6 +27,14 @@
         "identifier" : "32C23C8D224D46EFE62AFAD0",
         "name" : "UnitTests"
       }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:MatchaProtocol",
+        "identifier" : "MatchaProtocolTests",
+        "name" : "MatchaProtocolTests"
+      }
     }
   ],
   "version" : 1

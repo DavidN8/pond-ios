@@ -1,0 +1,95 @@
+{
+    "op": "reminders.parse_acknowledgement",
+    "description": "Reads the bot's 'Scheduled r-<16 hex> for <ISO instant>.' notice at the start of a message body, or null.",
+    "cases": [
+        {
+            "name": "the bot's notice",
+            "input": {
+                "body": "Scheduled r-0123456789abcdef for 2026-01-01T09:00:00.000Z. Cancel with !remind cancel r-0123456789abcdef."
+            },
+            "expect": {
+                "reminderId": "r-0123456789abcdef",
+                "dueAt": 1767258000000
+            }
+        },
+        {
+            "name": "an instant without fraction",
+            "input": {
+                "body": "Scheduled r-0123456789abcdef for 2026-01-01T09:00:00Z. Cancel with !remind cancel r-0123456789abcdef."
+            },
+            "expect": {
+                "reminderId": "r-0123456789abcdef",
+                "dueAt": 1767258000000
+            }
+        },
+        {
+            "name": "nanoseconds are cut to milliseconds",
+            "input": {
+                "body": "Scheduled r-0123456789abcdef for 2026-01-01T09:00:00.123456789Z. Cancel with !remind cancel r-0123456789abcdef."
+            },
+            "expect": {
+                "reminderId": "r-0123456789abcdef",
+                "dueAt": 1767258000123
+            }
+        },
+        {
+            "name": "an impossible date",
+            "input": {
+                "body": "Scheduled r-0123456789abcdef for 2026-02-30T09:00:00.000Z. Cancel with !remind cancel r-0123456789abcdef."
+            },
+            "expect": null
+        },
+        {
+            "name": "uppercase hex is not a reminder id",
+            "input": {
+                "body": "Scheduled r-0123456789ABCDEF for 2026-01-01T09:00:00.000Z."
+            },
+            "expect": null
+        },
+        {
+            "name": "a short reminder id",
+            "input": {
+                "body": "Scheduled r-0123456789abcde for 2026-01-01T09:00:00.000Z."
+            },
+            "expect": null
+        },
+        {
+            "name": "the notice must start the body",
+            "input": {
+                "body": "Note: Scheduled r-0123456789abcdef for 2026-01-01T09:00:00.000Z. Cancel with !remind cancel r-0123456789abcdef."
+            },
+            "expect": null
+        },
+        {
+            "name": "without the final period the instant loses its fraction",
+            "input": {
+                "body": "Scheduled r-0123456789abcdef for 2026-01-01T09:00:00.000Z"
+            },
+            "expect": null
+        },
+        {
+            "name": "the instant ends at the last period before whitespace",
+            "input": {
+                "body": "Scheduled r-0123456789abcdef for 2026-01-01T09:00:00.000Z.\nNext line"
+            },
+            "expect": {
+                "reminderId": "r-0123456789abcdef",
+                "dueAt": 1767258000000
+            }
+        },
+        {
+            "name": "a delivered reminder",
+            "input": {
+                "body": "Reminder for @alice:example.org: hi"
+            },
+            "expect": null
+        },
+        {
+            "name": "no body",
+            "input": {
+                "body": null
+            },
+            "expect": null
+        }
+    ]
+}

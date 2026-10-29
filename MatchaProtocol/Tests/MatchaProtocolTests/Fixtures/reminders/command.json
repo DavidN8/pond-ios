@@ -1,0 +1,81 @@
+{
+    "op": "reminders.command",
+    "description": "The !remind command sent as a plain text message: delays in seconds, exact times as a UTC ISO instant with milliseconds; the message is trimmed. time is {in, unit} with unit seconds, minutes, hours or days, or {at} in epoch milliseconds.",
+    "cases": [
+        {
+            "name": "minutes are sent as seconds",
+            "input": {
+                "time": {
+                    "in": 10,
+                    "unit": "minutes"
+                },
+                "message": " Check build "
+            },
+            "expect": "!remind 600s Check build"
+        },
+        {
+            "name": "days are sent as seconds",
+            "input": {
+                "time": {
+                    "in": 2,
+                    "unit": "days"
+                },
+                "message": "x"
+            },
+            "expect": "!remind 172800s x"
+        },
+        {
+            "name": "hours are sent as seconds",
+            "input": {
+                "time": {
+                    "in": 3,
+                    "unit": "hours"
+                },
+                "message": "Stand-up"
+            },
+            "expect": "!remind 10800s Stand-up"
+        },
+        {
+            "name": "seconds",
+            "input": {
+                "time": {
+                    "in": 1,
+                    "unit": "seconds"
+                },
+                "message": "Now"
+            },
+            "expect": "!remind 1s Now"
+        },
+        {
+            "name": "an exact time",
+            "input": {
+                "time": {
+                    "at": 1767258000000
+                },
+                "message": "Review"
+            },
+            "expect": "!remind at 2026-01-01T09:00:00.000Z Review"
+        },
+        {
+            "name": "an exact time keeps its milliseconds",
+            "input": {
+                "time": {
+                    "at": 1767225600123
+                },
+                "message": "Ms"
+            },
+            "expect": "!remind at 2026-01-01T00:00:00.123Z Ms"
+        },
+        {
+            "name": "inner newlines are kept",
+            "input": {
+                "time": {
+                    "in": 5,
+                    "unit": "minutes"
+                },
+                "message": "  Do it\nhttps://matrix.to/#/!r:example.org/$t  "
+            },
+            "expect": "!remind 300s Do it\nhttps://matrix.to/#/!r:example.org/$t"
+        }
+    ]
+}

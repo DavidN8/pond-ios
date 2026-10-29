@@ -244,7 +244,7 @@ struct TimelineReplyView: View {
                     
                     Text(context.viewState.buildMessagePreview(formattedBody: formattedBody, plainBody: plainBody))
                         .font(.compound.bodyMD)
-                        .foregroundColor(.compound.textSecondary)
+                        .foregroundColor(MatchaColors.bubbleSecondaryText) // matcha
                         .tint(.compound.textLinkExternal)
                         .lineLimit(2)
                 }

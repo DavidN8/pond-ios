@@ -1,0 +1,313 @@
+{
+    "op": "docs.catalog",
+    "description": "A space's documents from the catalog document's documents map ({id: {title, createdAt}}): valid entries plus the main document (title null, createdAt 0) when the catalog does not name it, sorted by createdAt then id. isInvalid when any entry is malformed: the catalog can then not be edited.",
+    "cases": [
+        {
+            "name": "an empty catalog lists the main document",
+            "input": {
+                "entries": {}
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    }
+                ],
+                "isInvalid": false
+            }
+        },
+        {
+            "name": "documents are sorted by creation time, then id",
+            "input": {
+                "entries": {
+                    "b0000000-0000-4000-8000-000000000000": {
+                        "title": "Second",
+                        "createdAt": 2
+                    },
+                    "a0000000-0000-4000-8000-000000000000": {
+                        "title": "Also second",
+                        "createdAt": 2
+                    },
+                    "0f8fad5b-d9cb-469f-a165-70867728950e": {
+                        "title": "First",
+                        "createdAt": 1
+                    }
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    },
+                    {
+                        "id": "0f8fad5b-d9cb-469f-a165-70867728950e",
+                        "title": "First",
+                        "createdAt": 1
+                    },
+                    {
+                        "id": "a0000000-0000-4000-8000-000000000000",
+                        "title": "Also second",
+                        "createdAt": 2
+                    },
+                    {
+                        "id": "b0000000-0000-4000-8000-000000000000",
+                        "title": "Second",
+                        "createdAt": 2
+                    }
+                ],
+                "isInvalid": false
+            }
+        },
+        {
+            "name": "a named main document",
+            "input": {
+                "entries": {
+                    "main": {
+                        "title": "Space notes",
+                        "createdAt": 0
+                    }
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": "Space notes",
+                        "createdAt": 0
+                    }
+                ],
+                "isInvalid": false
+            }
+        },
+        {
+            "name": "titles are kept as written",
+            "input": {
+                "entries": {
+                    "0f8fad5b-d9cb-469f-a165-70867728950e": {
+                        "title": "  Padded  ",
+                        "createdAt": 5
+                    }
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    },
+                    {
+                        "id": "0f8fad5b-d9cb-469f-a165-70867728950e",
+                        "title": "  Padded  ",
+                        "createdAt": 5
+                    }
+                ],
+                "isInvalid": false
+            }
+        },
+        {
+            "name": "an uppercase id is invalid",
+            "input": {
+                "entries": {
+                    "0F8FAD5B-D9CB-469F-A165-70867728950E": {
+                        "title": "Upper",
+                        "createdAt": 1
+                    },
+                    "0f8fad5b-d9cb-469f-a165-70867728950e": {
+                        "title": "Kept",
+                        "createdAt": 2
+                    }
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    },
+                    {
+                        "id": "0f8fad5b-d9cb-469f-a165-70867728950e",
+                        "title": "Kept",
+                        "createdAt": 2
+                    }
+                ],
+                "isInvalid": true
+            }
+        },
+        {
+            "name": "the catalog is not a document",
+            "input": {
+                "entries": {
+                    "catalog": {
+                        "title": "Catalog",
+                        "createdAt": 1
+                    }
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    }
+                ],
+                "isInvalid": true
+            }
+        },
+        {
+            "name": "a blank title is invalid",
+            "input": {
+                "entries": {
+                    "0f8fad5b-d9cb-469f-a165-70867728950e": {
+                        "title": "  ",
+                        "createdAt": 1
+                    }
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    }
+                ],
+                "isInvalid": true
+            }
+        },
+        {
+            "name": "a title of 101 characters is invalid",
+            "input": {
+                "entries": {
+                    "0f8fad5b-d9cb-469f-a165-70867728950e": {
+                        "title": "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+                        "createdAt": 1
+                    }
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    }
+                ],
+                "isInvalid": true
+            }
+        },
+        {
+            "name": "a negative creation time is invalid",
+            "input": {
+                "entries": {
+                    "0f8fad5b-d9cb-469f-a165-70867728950e": {
+                        "title": "T",
+                        "createdAt": -1
+                    }
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    }
+                ],
+                "isInvalid": true
+            }
+        },
+        {
+            "name": "the largest safe integer is a valid creation time",
+            "input": {
+                "entries": {
+                    "0f8fad5b-d9cb-469f-a165-70867728950e": {
+                        "title": "T",
+                        "createdAt": 9007199254740991
+                    }
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    },
+                    {
+                        "id": "0f8fad5b-d9cb-469f-a165-70867728950e",
+                        "title": "T",
+                        "createdAt": 9007199254740991
+                    }
+                ],
+                "isInvalid": false
+            }
+        },
+        {
+            "name": "a creation time beyond the largest safe integer is invalid",
+            "input": {
+                "entries": {
+                    "0f8fad5b-d9cb-469f-a165-70867728950e": {
+                        "title": "T",
+                        "createdAt": 9007199254740992
+                    }
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    }
+                ],
+                "isInvalid": true
+            }
+        },
+        {
+            "name": "a fractional creation time is invalid",
+            "input": {
+                "entries": {
+                    "0f8fad5b-d9cb-469f-a165-70867728950e": {
+                        "title": "T",
+                        "createdAt": 1.5
+                    }
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    }
+                ],
+                "isInvalid": true
+            }
+        },
+        {
+            "name": "an entry that is not an object is invalid",
+            "input": {
+                "entries": {
+                    "0f8fad5b-d9cb-469f-a165-70867728950e": "Title"
+                }
+            },
+            "expect": {
+                "documents": [
+                    {
+                        "id": "main",
+                        "title": null,
+                        "createdAt": 0
+                    }
+                ],
+                "isInvalid": true
+            }
+        }
+    ]
+}

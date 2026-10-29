@@ -12,8 +12,6 @@ import SentrySwiftUI
 import SwiftUI
 
 struct HomeScreen: View {
-    @Environment(\.isInSidebar) private var isInSidebar
-    
     @ObservedObject var context: HomeScreenViewModel.Context
     
     @State private var scrollViewAdapter = ScrollViewAdapter()
@@ -30,9 +28,8 @@ struct HomeScreen: View {
                    actions: leaveRoomAlertActions,
                    message: leaveRoomAlertMessage)
             .navigationTitle(title)
-            .navigationBarTitleDisplayMode(Compound.supportsGlass ? .inline : .automatic)
+            .navigationBarTitleDisplayMode(.large) // matcha: large titles on root tabs (plan decision 10), so no editor role either
             .toolbar { toolbar }
-            .toolbarRole(Compound.supportsGlass ? .editor : .automatic)
             .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
             .track(screen: .Home)
             .toolbarBloom(hasSearchBar: context.viewState.isRoomListSearchEnabled)
@@ -61,20 +58,10 @@ struct HomeScreen: View {
     
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: Compound.supportsGlass ? .title : .navigationBarLeading) {
-            HStack(spacing: isInSidebar ? 8 : 12) {
-                // The settings button is inside the title on iOS 26 to workaround a
-                // weird liquid glass transition when pushing/popping a room.
-                settingsButton
-                    .buttonStyle(.borderless)
-                
-                if #available(iOS 26, *) {
-                    Text(title)
-                        .font(isInSidebar ? .compound.bodyLGSemibold : .compound.headingLGBold)
-                        .foregroundStyle(.compound.textPrimary)
-                        .minimumScaleFactor(isInSidebar ? 1 : 0.6) // Allow scaling down to bodyLG if needed.
-                }
-            }
+        // matcha: Settings behind the avatar at the leading edge, the title below the bar.
+        ToolbarItem(placement: .navigationBarLeading) {
+            settingsButton
+                .buttonStyle(.borderless)
         }
         .backportSharedBackgroundVisibility(.hidden)
         
@@ -120,6 +107,7 @@ struct HomeScreen: View {
             }
             .accessibilityLabel(L10n.actionStartChat)
             .accessibilityIdentifier(A11yIdentifiers.homeScreen.startChat)
+            .matchaProminentToolbarButton() // matcha
         default:
             EmptyView()
         }

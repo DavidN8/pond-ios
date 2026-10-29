@@ -16,6 +16,9 @@ struct StateRoomTimelineView: View {
             .font(.compound.bodySM)
             .multilineTextAlignment(.center)
             .foregroundColor(.compound.textSecondary)
+            .padding(.horizontal, 12) // matcha: a pill, as in iOS chat apps
+            .padding(.vertical, 4)
+            .background(MatchaColors.systemPillBackground, in: .rect(cornerRadius: 8))
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.horizontal, 36.0)
             .padding(.vertical, 8.0)
@@ -29,6 +32,7 @@ struct StateRoomTimelineView_Previews: PreviewProvider, TestablePreview {
     
     static var body: some View {
         StateRoomTimelineView(timelineItem: item)
+            .background(MatchaColors.chatWallpaper)
     }
     
     static let item = StateRoomTimelineItem(id: .randomVirtual,

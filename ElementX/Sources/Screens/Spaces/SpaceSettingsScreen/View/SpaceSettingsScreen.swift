@@ -17,6 +17,12 @@ struct SpaceSettingsScreen: View {
             if context.viewState.canSeeSecurityAndPrivacy {
                 securitySection
             }
+            if context.viewState.isEmojiPackVisible { // matcha
+                Section {
+                    ListRow(label: .default(title: UntranslatedL10n.screenMatchaEmojiTitle, icon: \.reaction),
+                            kind: .navigationLink { context.send(viewAction: .processTapEmojiPack) })
+                }
+            }
             peopleSection
             leaveSpaceSection
         }

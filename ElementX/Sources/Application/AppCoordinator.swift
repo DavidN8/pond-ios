@@ -10,6 +10,7 @@ import AnalyticsEvents
 import BackgroundTasks
 import Combine
 import Intents
+import MatchaProtocol
 import MatrixRustSDK
 import Sentry
 import SwiftUI
@@ -940,6 +941,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         Task { await pauseClientServices(isBackgroundTask: false) }
         userSessionFlowCoordinator?.stop()
+        userSession.matchaService.stop() // matcha
         // Leaves any ongoing call and releases the native call stack, which a soft logout would
         // otherwise leave running against a session that can no longer reach the server.
         elementCallService.setUserSession(nil)
@@ -1079,6 +1081,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         Task { await pauseClientServices(isBackgroundTask: false) }
         userSessionFlowCoordinator?.stop()
+        userSession.matchaService.stop() // matcha
         
         // Allow for everything to deallocate properly
         Task {
@@ -1184,8 +1187,12 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             return
         }
         
+        // matcha: typed custom emoji become images, from the packs last read, as when sent from the composer.
+        let html = userSession.userSettings.app.matchaWorkspacesEnabled && ImagePacks.mayContainTypedEmoji(replyText)
+            ? CustomEmojiMessages.formattedBody(markdown: replyText, html: nil, packs: userSession.matchaService.customEmojiPacks.cachedPacks(roomID: roomID))
+            : nil
         switch await roomProxy.timeline.sendMessage(replyText,
-                                                    html: nil,
+                                                    html: html, // matcha
                                                     inReplyToEventID: nil,
                                                     intentionalMentions: .empty) {
         case .success:

@@ -1,0 +1,318 @@
+{
+    "op": "thread_metadata.resolve",
+    "description": "Resolves a thread's name and archive state from its events (newest first; only valid patches of rootId count), its root message body and the legacy archive state flag. nameSource is explicit, root_body or event_id.",
+    "cases": [
+        {
+            "name": "the newest value of each field wins independently",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": "Original body",
+                "legacyArchived": null,
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e22:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "archived": true,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e23:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "name": "Newest name",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e24:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "name": "Older name",
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    }
+                ]
+            },
+            "expect": {
+                "name": "Newest name",
+                "archived": true,
+                "archiveExplicit": true,
+                "nameSource": "explicit"
+            }
+        },
+        {
+            "name": "a restore is explicit",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": "Body",
+                "legacyArchived": null,
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e25:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    }
+                ]
+            },
+            "expect": {
+                "name": "Body",
+                "archived": false,
+                "archiveExplicit": true,
+                "nameSource": "root_body"
+            }
+        },
+        {
+            "name": "an untouched thread is named after its root and not explicitly archived",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": "Body",
+                "legacyArchived": null,
+                "events": []
+            },
+            "expect": {
+                "name": "Body",
+                "archived": false,
+                "archiveExplicit": false,
+                "nameSource": "root_body"
+            }
+        },
+        {
+            "name": "the legacy flag archives a thread without patches",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": "Body",
+                "legacyArchived": true,
+                "events": []
+            },
+            "expect": {
+                "name": "Body",
+                "archived": true,
+                "archiveExplicit": true,
+                "nameSource": "root_body"
+            }
+        },
+        {
+            "name": "a patch wins over the legacy flag",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": "Body",
+                "legacyArchived": true,
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e26:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "archived": false,
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    }
+                ]
+            },
+            "expect": {
+                "name": "Body",
+                "archived": false,
+                "archiveExplicit": true,
+                "nameSource": "root_body"
+            }
+        },
+        {
+            "name": "a legacy false still counts as explicit",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": "Body",
+                "legacyArchived": false,
+                "events": []
+            },
+            "expect": {
+                "name": "Body",
+                "archived": false,
+                "archiveExplicit": true,
+                "nameSource": "root_body"
+            }
+        },
+        {
+            "name": "without a root body the name is the root id",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": null,
+                "legacyArchived": null,
+                "events": []
+            },
+            "expect": {
+                "name": "$root:example.org",
+                "archived": false,
+                "archiveExplicit": false,
+                "nameSource": "event_id"
+            }
+        },
+        {
+            "name": "a blank root body falls back to the root id",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": " \n\t ",
+                "legacyArchived": null,
+                "events": []
+            },
+            "expect": {
+                "name": "$root:example.org",
+                "archived": false,
+                "archiveExplicit": false,
+                "nameSource": "event_id"
+            }
+        },
+        {
+            "name": "the root body's whitespace runs collapse to one space",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": "Line one\n\n  line   two\r\n\tend",
+                "legacyArchived": null,
+                "events": []
+            },
+            "expect": {
+                "name": "Line one line two end",
+                "archived": false,
+                "archiveExplicit": false,
+                "nameSource": "root_body"
+            }
+        },
+        {
+            "name": "the root body is cut to 100 UTF-16 code units",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                "legacyArchived": null,
+                "events": []
+            },
+            "expect": {
+                "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                "archived": false,
+                "archiveExplicit": false,
+                "nameSource": "root_body"
+            }
+        },
+        {
+            "name": "only ASCII whitespace collapses; other spaces are only trimmed at the ends",
+            "note": "The web client's \\s also collapses U+00A0; Android keeps inner no-break spaces.",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": " Plan  B ",
+                "legacyArchived": null,
+                "events": []
+            },
+            "expect": {
+                "name": "Plan  B",
+                "archived": false,
+                "archiveExplicit": false,
+                "nameSource": "root_body"
+            }
+        },
+        {
+            "name": "invalid and unrelated patches are ignored",
+            "input": {
+                "rootId": "$root:example.org",
+                "rootBody": "Body",
+                "legacyArchived": null,
+                "events": [
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e27:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 2,
+                            "name": "Future",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e28:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "name": "Other",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$other:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e29:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "name": "   ",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    },
+                    {
+                        "type": "com.matchahoneylatte.thread.metadata",
+                        "event_id": "$e30:example.org",
+                        "sender": "@alice:example.org",
+                        "origin_server_ts": 1767225600000,
+                        "content": {
+                            "version": 1,
+                            "name": "Valid",
+                            "m.relates_to": {
+                                "rel_type": "m.reference",
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    }
+                ]
+            },
+            "expect": {
+                "name": "Valid",
+                "archived": false,
+                "archiveExplicit": false,
+                "nameSource": "explicit"
+            }
+        }
+    ]
+}

@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Compound // matcha: CompoundIcon for the Seen by icon
 import OrderedCollections
 import SFSafeSymbols
 import SwiftUI
@@ -77,6 +78,10 @@ enum TimelineItemMenuAction: Identifiable, Hashable {
     case unpin
     case viewInRoomTimeline
     case downloadMedia
+    /// matcha: who has read your message, now that read receipts aren't shown under bubbles.
+    case seenBy
+    /// matcha: the "Remind me" sheet about this message.
+    case remindMe
     
     var id: Self {
         self
@@ -190,6 +195,10 @@ enum TimelineItemMenuAction: Identifiable, Hashable {
             Label(L10n.actionViewInTimeline, icon: \.visibilityOn)
         case .downloadMedia:
             Label(L10n.actionDownload, icon: \.downloadIos)
+        case .seenBy: // matcha
+            Label { Text(L10n.commonSeenBy) } icon: { CompoundIcon(asset: Asset.Images.matchaDoneAll) }
+        case .remindMe: // matcha
+            Label(UntranslatedL10n.actionMatchaRemindMe, icon: \.notifications)
         }
     }
 }

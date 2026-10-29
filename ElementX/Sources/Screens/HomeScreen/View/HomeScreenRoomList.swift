@@ -39,6 +39,7 @@ struct HomeScreenRoomList: View {
                                    isSelected: isSelected,
                                    mediaProvider: context.mediaProvider,
                                    action: context.send)
+                    .matchaRoomSwipeActions(for: room, send: context.send) // matcha
                     .simultaneousGesture(TapGesture(count: 2).onEnded {
                         context.send(viewAction: .detachRoom(roomIdentifier: room.id))
                     })

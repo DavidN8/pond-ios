@@ -29,10 +29,9 @@ struct PinnedItemsBannerView: View {
         Button { onMainButtonTap() } label: {
             HStack(spacing: 0) {
                 HStack(spacing: 10) {
-                    PinnedItemsIndicatorView(pinIndex: state.selectedPinnedIndex, pinsCount: state.count)
-                        .accessibilityHidden(true)
-                    CompoundIcon(\.pinSolid, size: .small, relativeTo: .compound.bodyMD)
-                        .foregroundColor(Color.compound.iconSecondaryAlpha)
+                    // matcha: a flat strip, a 16 pt pin and no indicator bar (WHATSAPP_DESIGN §3.3); "N of M" still says which pin.
+                    CompoundIcon(\.pinSolid, size: .xSmall, relativeTo: .compound.bodyMD)
+                        .foregroundColor(Color.compound.iconSecondary)
                         .accessibilityHidden(true)
                     content
                 }

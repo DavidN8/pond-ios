@@ -1,0 +1,189 @@
+{
+    "op": "kanban.card_content",
+    "description": "The content of a complete card revision; error invalid_argument for an invalid title, description or card id.",
+    "cases": [
+        {
+            "name": "every field",
+            "input": {
+                "rootId": "$board:example.org",
+                "card": {
+                    "cardId": "c-1",
+                    "title": "Title",
+                    "description": "Notes",
+                    "status": "done",
+                    "archived": true,
+                    "threadId": "$t:example.org",
+                    "dueAt": 1767225600000,
+                    "reminderRequested": {
+                        "eventId": "$cmd:example.org",
+                        "at": 1767222000000
+                    },
+                    "showToRoom": false
+                }
+            },
+            "expect": {
+                "version": 1,
+                "card_id": "c-1",
+                "title": "Title",
+                "description": "Notes",
+                "column": "done",
+                "archived": true,
+                "show_to_room": false,
+                "thread_id": "$t:example.org",
+                "due_at": 1767225600000,
+                "reminder_requested": {
+                    "event_id": "$cmd:example.org",
+                    "at": 1767222000000
+                },
+                "m.relates_to": {
+                    "rel_type": "m.reference",
+                    "event_id": "$board:example.org"
+                }
+            }
+        },
+        {
+            "name": "optional fields are left out",
+            "input": {
+                "rootId": "$board:example.org",
+                "card": {
+                    "cardId": "c-2",
+                    "title": "Title",
+                    "description": "",
+                    "status": "todo",
+                    "archived": false,
+                    "threadId": null,
+                    "dueAt": null,
+                    "reminderRequested": null,
+                    "showToRoom": true
+                }
+            },
+            "expect": {
+                "version": 1,
+                "card_id": "c-2",
+                "title": "Title",
+                "description": "",
+                "column": "todo",
+                "archived": false,
+                "show_to_room": true,
+                "m.relates_to": {
+                    "rel_type": "m.reference",
+                    "event_id": "$board:example.org"
+                }
+            }
+        },
+        {
+            "name": "the title is trimmed",
+            "input": {
+                "rootId": "$board:example.org",
+                "card": {
+                    "cardId": "c-2",
+                    "title": "  Spaced  ",
+                    "description": "",
+                    "status": "todo",
+                    "archived": false,
+                    "threadId": null,
+                    "dueAt": null,
+                    "reminderRequested": null,
+                    "showToRoom": true
+                }
+            },
+            "expect": {
+                "version": 1,
+                "card_id": "c-2",
+                "title": "Spaced",
+                "description": "",
+                "column": "todo",
+                "archived": false,
+                "show_to_room": true,
+                "m.relates_to": {
+                    "rel_type": "m.reference",
+                    "event_id": "$board:example.org"
+                }
+            }
+        },
+        {
+            "name": "an invalid deadline is left out",
+            "input": {
+                "rootId": "$board:example.org",
+                "card": {
+                    "cardId": "c-2",
+                    "title": "Title",
+                    "description": "",
+                    "status": "todo",
+                    "archived": false,
+                    "threadId": null,
+                    "dueAt": 0,
+                    "reminderRequested": null,
+                    "showToRoom": true
+                }
+            },
+            "expect": {
+                "version": 1,
+                "card_id": "c-2",
+                "title": "Title",
+                "description": "",
+                "column": "todo",
+                "archived": false,
+                "show_to_room": true,
+                "m.relates_to": {
+                    "rel_type": "m.reference",
+                    "event_id": "$board:example.org"
+                }
+            }
+        },
+        {
+            "name": "a blank title is refused",
+            "input": {
+                "rootId": "$board:example.org",
+                "card": {
+                    "cardId": "c-2",
+                    "title": " ",
+                    "description": "",
+                    "status": "todo",
+                    "archived": false,
+                    "threadId": null,
+                    "dueAt": null,
+                    "reminderRequested": null,
+                    "showToRoom": true
+                }
+            },
+            "error": "invalid_argument"
+        },
+        {
+            "name": "an invalid card id is refused",
+            "input": {
+                "rootId": "$board:example.org",
+                "card": {
+                    "cardId": "bad id",
+                    "title": "Title",
+                    "description": "",
+                    "status": "todo",
+                    "archived": false,
+                    "threadId": null,
+                    "dueAt": null,
+                    "reminderRequested": null,
+                    "showToRoom": true
+                }
+            },
+            "error": "invalid_argument"
+        },
+        {
+            "name": "a description of 4001 characters is refused",
+            "input": {
+                "rootId": "$board:example.org",
+                "card": {
+                    "cardId": "c-2",
+                    "title": "Title",
+                    "description": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                    "status": "todo",
+                    "archived": false,
+                    "threadId": null,
+                    "dueAt": null,
+                    "reminderRequested": null,
+                    "showToRoom": true
+                }
+            },
+            "error": "invalid_argument"
+        }
+    ]
+}

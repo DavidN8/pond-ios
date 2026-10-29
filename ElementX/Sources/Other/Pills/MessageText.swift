@@ -178,7 +178,9 @@ struct MessageText: UIViewRepresentable {
         textView.updateClosure = { [weak textView] in
             guard let textView else { return }
             do {
-                attributedString = try AttributedString(textView.attributedText, including: \.elementX)
+                // matcha: only the message's own text, as the text view's ends with the reserved space, which was appended again.
+                let length = min(String(attributedString.characters).utf16.count, textView.attributedText.length)
+                attributedString = try AttributedString(textView.attributedText.attributedSubstring(from: NSRange(location: 0, length: length)), including: \.elementX)
             } catch {
                 MXLog.error("Failed to update attributedString: \(error)]")
                 return

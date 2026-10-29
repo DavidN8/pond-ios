@@ -8,10 +8,13 @@
 
 import Combine
 import Foundation
+import MatchaProtocol
 
 private enum SuggestionTriggerRegex {
     /// Matches any string of characters after an @ or # that is not a whitespace
     static let atOrHash = /[@#]\S*/
+    /// matcha: a custom emoji's `:code`, at the start or after whitespace, as in the web client's EmojiProvider.
+    static let colon = /(?:^|\s)(:[^\s:]+:?)/
     
     static let at: Character = "@"
     static let hash: Character = "#"
@@ -20,6 +23,10 @@ private enum SuggestionTriggerRegex {
 final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
     private let roomProxy: JoinedRoomProxyProtocol
     private var canMentionAllUsers = false
+    /// matcha: reads the room's custom emoji packs again; nil while custom emoji are off.
+    private let loadCustomEmojiPacks: CustomEmojiPacksLoader?
+    private let customEmojiPacksSubject = CurrentValueSubject<[EmojiPack], Never>([]) // matcha
+    private var loadCustomEmojiPacksTask: Task<Void, Never>? // matcha
     
     private(set) var suggestionsPublisher: AnyPublisher<[SuggestionItem], Never> = Empty().eraseToAnyPublisher()
     
@@ -30,12 +37,14 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
     private var updateMembersTask: Task<Void, Never>?
     
     init(roomProxy: JoinedRoomProxyProtocol,
-         roomListPublisher: AnyPublisher<[RoomSummary], Never>) {
+         roomListPublisher: AnyPublisher<[RoomSummary], Never>,
+         loadCustomEmojiPacks: CustomEmojiPacksLoader? = nil) { // matcha: loadCustomEmojiPacks
         self.roomProxy = roomProxy
+        self.loadCustomEmojiPacks = loadCustomEmojiPacks // matcha
         
         suggestionsPublisher = suggestionTriggerSubject
-            .combineLatest(roomProxy.membersPublisher, roomListPublisher)
-            .map { [weak self, ownUserID = roomProxy.ownUserID] suggestionTrigger, members, roomSummaries -> [SuggestionItem] in
+            .combineLatest(roomProxy.membersPublisher, roomListPublisher, customEmojiPacksSubject) // matcha: packs
+            .map { [weak self, ownUserID = roomProxy.ownUserID] suggestionTrigger, members, roomSummaries, customEmojiPacks -> [SuggestionItem] in
                 guard let self,
                       let suggestionTrigger else {
                     return []
@@ -46,6 +55,8 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
                     return membersSuggestions(suggestionTrigger: suggestionTrigger, members: members, ownUserID: ownUserID)
                 case .room:
                     return roomSuggestions(suggestionTrigger: suggestionTrigger, roomSummaries: roomSummaries)
+                case .customEmoji: // matcha
+                    return Self.customEmojiSuggestions(suggestionTrigger: suggestionTrigger, packs: customEmojiPacks)
                 }
             }
             // We only debounce if the suggestion is nil
@@ -69,8 +80,13 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
     
     func setSuggestionTrigger(_ suggestionTrigger: SuggestionTrigger?) {
         let isNewUserMention = suggestionTrigger?.type == .user && suggestionTriggerSubject.value?.type != .user
+        let isNewCustomEmoji = suggestionTrigger?.type == .customEmoji && suggestionTriggerSubject.value?.type != .customEmoji // matcha
         
         suggestionTriggerSubject.value = suggestionTrigger
+        
+        if isNewCustomEmoji { // matcha
+            reloadCustomEmojiPacks()
+        }
         
         // Refresh the members each time a new user suggestion is triggered to pull in the latest profiles.
         guard isNewUserMention, updateMembersTask == nil else { return }
@@ -141,7 +157,7 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
         }
         
         guard let match else {
-            return nil
+            return customEmojiTrigger(in: text, selectedRange: selectedRange) // matcha
         }
         
         var suggestionText = String(text[match.range])
@@ -180,6 +196,40 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
             return true
         }
         return roomName.localizedStandardContains(searchText) || roomAlias.localizedStandardContains(searchText)
+    }
+}
+
+// MARK: - Matcha
+
+private extension CompletionSuggestionService {
+    /// Custom emoji whose shortcode starts with the typed `:code`, as the web client offers them.
+    static func customEmojiSuggestions(suggestionTrigger: SuggestionTrigger, packs: [EmojiPack]) -> [SuggestionItem] {
+        ImagePacks.suggestions(for: suggestionTrigger.text, in: packs).map { emoji in
+            SuggestionItem(suggestionType: .customEmoji(emoji), range: suggestionTrigger.range, rawSuggestionText: suggestionTrigger.text)
+        }
+    }
+    
+    /// The `:code` being typed, when custom emoji are on: a colon at the start or after whitespace, then at least one character.
+    func customEmojiTrigger(in text: String, selectedRange: NSRange) -> SuggestionTrigger? {
+        guard loadCustomEmojiPacks != nil else { return nil }
+        for match in text.matches(of: SuggestionTriggerRegex.colon) {
+            let code = match.output.1
+            let range = NSRange(code.startIndex..<code.endIndex, in: text)
+            if selectedRange.location >= range.lowerBound, selectedRange.location <= range.upperBound, selectedRange.length <= range.length {
+                return SuggestionTrigger(type: .customEmoji, text: String(code.dropFirst()), range: range)
+            }
+        }
+        return nil
+    }
+    
+    /// Reads the room's packs again each time suggestions open, so they follow edits made elsewhere.
+    func reloadCustomEmojiPacks() {
+        guard let loadCustomEmojiPacks, loadCustomEmojiPacksTask == nil else { return }
+        loadCustomEmojiPacksTask = Task { [weak self] in
+            let packs = await loadCustomEmojiPacks()
+            self?.customEmojiPacksSubject.send(packs)
+            self?.loadCustomEmojiPacksTask = nil
+        }
     }
 }
 

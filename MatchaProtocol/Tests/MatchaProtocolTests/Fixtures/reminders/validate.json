@@ -1,0 +1,96 @@
+{
+    "op": "reminders.validate",
+    "description": "The first reason the reminder sheet refuses a reminder, or null: nonexistent_time (dueAt null: the local time does not exist), not_in_future, too_far, empty_message, message_too_long, checked in that order.",
+    "cases": [
+        {
+            "name": "a valid reminder",
+            "input": {
+                "dueAt": 1767229200000,
+                "message": "Hi",
+                "maxMessageLength": 2000,
+                "now": 1767225600000
+            },
+            "expect": null
+        },
+        {
+            "name": "a time skipped by a clock change",
+            "input": {
+                "dueAt": null,
+                "message": "Hi",
+                "maxMessageLength": 2000,
+                "now": 1767225600000
+            },
+            "expect": "nonexistent_time"
+        },
+        {
+            "name": "the time is checked before the message",
+            "input": {
+                "dueAt": null,
+                "message": "",
+                "maxMessageLength": 2000,
+                "now": 1767225600000
+            },
+            "expect": "nonexistent_time"
+        },
+        {
+            "name": "now is not in the future",
+            "input": {
+                "dueAt": 1767225600000,
+                "message": "Hi",
+                "maxMessageLength": 2000,
+                "now": 1767225600000
+            },
+            "expect": "not_in_future"
+        },
+        {
+            "name": "past and blank says not in the future",
+            "input": {
+                "dueAt": 1767225599999,
+                "message": " ",
+                "maxMessageLength": 2000,
+                "now": 1767225600000
+            },
+            "expect": "not_in_future"
+        },
+        {
+            "name": "more than a year away",
+            "input": {
+                "dueAt": 1798761600001,
+                "message": "Hi",
+                "maxMessageLength": 2000,
+                "now": 1767225600000
+            },
+            "expect": "too_far"
+        },
+        {
+            "name": "a blank message",
+            "input": {
+                "dueAt": 1767225600001,
+                "message": " \n ",
+                "maxMessageLength": 2000,
+                "now": 1767225600000
+            },
+            "expect": "empty_message"
+        },
+        {
+            "name": "a message over the limit after trimming",
+            "input": {
+                "dueAt": 1767225600001,
+                "message": " mmmmmmmmmmm ",
+                "maxMessageLength": 10,
+                "now": 1767225600000
+            },
+            "expect": "message_too_long"
+        },
+        {
+            "name": "a message at the limit after trimming",
+            "input": {
+                "dueAt": 1767225600001,
+                "message": " mmmmmmmmmm ",
+                "maxMessageLength": 10,
+                "now": 1767225600000
+            },
+            "expect": null
+        }
+    ]
+}

@@ -318,4 +318,23 @@ protocol ClientProxyProtocol: AnyObject {
     /// Configures the client-owned presence used by future sync requests and shared with clones and notification children.
     /// When `sendImmediately` is `true` this also asks the SDK to send a direct presence update.
     func configurePresence(_ presence: ClientProxyPresence, sendImmediately: Bool) async -> Result<Void, ClientProxyError>
+    
+    // MARK: - Room state without a timeline (matcha)
+    
+    /// `JoinedRoomProxyProtocol.stateEventsJSON(type:)` for a room in the local store, without opening its timeline.
+    func stateEventsJSON(roomID: String, type: String) async -> Result<[String: String], ClientProxyError>
+    /// `JoinedRoomProxyProtocol.fetchStateEventContentJSON(type:stateKey:)` for a room in the local store, without opening its timeline.
+    func fetchStateEventContentJSON(roomID: String, type: String, stateKey: String) async -> Result<String?, ClientProxyError>
+    /// The contents of a room's state events of `type` on the homeserver, by state key, every state key included; reads the room's
+    /// whole state, see `RoomStateRequest`.
+    func fetchStateEventsJSON(roomID: String, type: String) async -> Result<[String: String], ClientProxyError>
+    /// The info (power levels included) of a room in the local store, without opening its timeline, for the Notes tab's checks.
+    func roomInfo(roomID: String) async -> Result<RoomInfoProxyProtocol, ClientProxyError>
+    
+    // MARK: - Account data (matcha)
+    
+    /// The content of the global account data of `type` in the local store, which sync fills; nil when there is none.
+    func accountDataJSON(type: String) async -> Result<String?, ClientProxyError>
+    /// Sends global account data. The local store has it only once sync echoes it back.
+    func setAccountData(type: String, contentJSON: String) async -> Result<Void, ClientProxyError>
 }

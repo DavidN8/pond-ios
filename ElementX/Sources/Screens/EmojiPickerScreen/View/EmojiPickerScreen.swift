@@ -16,6 +16,7 @@ struct EmojiPickerScreen: View {
     @State private var isSearching = false
     
     @ScaledMetric(relativeTo: .title) var minimumWidth: Double = 64
+    @ScaledMetric(relativeTo: .title) private var customEmojiSize: Double = 36 // matcha
     
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .heavy)
     
@@ -30,13 +31,19 @@ struct EmojiPickerScreen: View {
                                     feedbackGenerator.impactOccurred()
                                     context.send(viewAction: .emojiTapped(emoji: emoji))
                                 } label: {
-                                    Text(emoji.value)
-                                        .padding(9.0)
-                                        .font(.compound.headingXL)
-                                        .background(Circle()
-                                            .foregroundColor(emojiBackgroundColor(for: emoji.value)))
+                                    Group {
+                                        if emoji.customEmojiName != nil { // matcha
+                                            CustomEmojiImage(url: emoji.value, size: customEmojiSize, mediaProvider: context.mediaProvider)
+                                        } else {
+                                            Text(emoji.value)
+                                        }
+                                    }
+                                    .padding(9.0)
+                                    .font(.compound.headingXL)
+                                    .background(Circle()
+                                        .foregroundColor(emojiBackgroundColor(for: emoji.value)))
                                 }
-                                .accessibilityLabel(accessibilityLabel(for: emoji.value))
+                                .accessibilityLabel(accessibilityLabel(for: emoji))
                             }
                         } header: {
                             EmojiPickerScreenHeaderView(title: category.name)
@@ -63,11 +70,12 @@ struct EmojiPickerScreen: View {
         }
     }
     
-    private func accessibilityLabel(for emoji: String) -> String {
-        if context.viewState.selectedEmojis.contains(emoji) {
-            return L10n.a11yRemoveReaction(emoji)
+    private func accessibilityLabel(for emoji: EmojiPickerEmojiViewData) -> String {
+        let name = emoji.customEmojiName ?? emoji.value // matcha: a custom emoji reads as its `:code:`
+        if context.viewState.selectedEmojis.contains(emoji.value) {
+            return L10n.a11yRemoveReaction(name)
         } else {
-            return L10n.a11yAddReaction(emoji)
+            return L10n.a11yAddReaction(name)
         }
     }
     

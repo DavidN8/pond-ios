@@ -89,6 +89,11 @@ nonisolated extension EventBasedTimelineItemProtocol {
             width += iconSize + 4
             height = max(height, iconSize)
         }
+        if isOutgoing, !hasFailedToSend { // matcha: the send/read tick after the time, sized like the status icon
+            let tickSize = UIFontMetrics(forTextStyle: textStyle).scaledValue(for: 16)
+            width += tickSize + 4
+            height = max(height, tickSize)
+        }
         // Small visual gap between the text content and the overlaid timestamp.
         width += 4
         return CGSize(width: ceil(width), height: ceil(height))

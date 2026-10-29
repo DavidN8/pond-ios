@@ -47,8 +47,8 @@ struct PlaceholderAvatarImage: View {
         return avatarColor?.background ?? .compound.iconPrimary
     }
     
-    private var avatarColor: DecorativeColor? {
-        Color.compound.decorativeColor(for: contentID)
+    private var avatarColor: MatchaColors.DecorativeColor? { // matcha: WhatsApp's avatar pairs
+        MatchaColors.decorativeColor(for: contentID)
     }
 }
 

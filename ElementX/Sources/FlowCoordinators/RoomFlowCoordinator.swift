@@ -79,6 +79,10 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private var roomProxy: JoinedRoomProxyProtocol!
+    /// matcha: the room's Matcha store, taken from the session's `MatchaService` while the flow shows the room.
+    private var matchaRoomStore: MatchaRoomStore?
+    /// matcha: the chat's writes and banners, shared by the chip bars of its room and thread screens.
+    private var matchaChat: MatchaChat?
     
     private var roomScreenCoordinator: RoomScreenCoordinator?
     private var childThreadScreenCoordinators: [ThreadTimelineScreenCoordinator] = []
@@ -94,6 +98,11 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
     // periphery:ignore - retaining purpose
     private var spaceFlowCoordinator: SpaceFlowCoordinator?
     private var membersFlowCoordinator: RoomMembersFlowCoordinator?
+    private var tasksBoardFlowCoordinator: TasksBoardFlowCoordinator? // matcha
+    private var spaceNotesFlowCoordinator: SpaceNotesFlowCoordinator? // matcha
+    private var remindMeSheet: AnyCancellable? // matcha
+    private var taskEditorSheet: AnyCancellable? // matcha
+    private var stickerPickerSheet: AnyCancellable? // matcha
     
     private let stateMachine: StateMachine<State, Event> = .init(state: .initial)
     
@@ -116,6 +125,12 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         self.flowParameters = flowParameters
         
         setupStateMachine()
+    }
+    
+    isolated deinit { // matcha: a flow replaced by another room's isn't dismissed, so it lets go of its room's store here.
+        if let matchaRoomStore {
+            userSession.matchaService.releaseStore(matchaRoomStore)
+        }
     }
     
     // MARK: - FlowCoordinatorProtocol
@@ -363,6 +378,13 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         // before it has been set which triggers a fatal error.
         self.roomProxy = roomProxy
         
+        // matcha: a second call racing the first past the subscription above takes no second hold.
+        if userSession.userSettings.app.matchaWorkspacesEnabled, matchaRoomStore == nil {
+            matchaRoomStore = userSession.matchaService.acquireStore(for: roomProxy)
+            matchaChat = matchaRoomStore.map { MatchaChat(store: $0) }
+            loadMatchaParentSpaces()
+        }
+        
         // Subscribe to room info updates in order to detect rooms being left on other devices
         // and react accordingly by dismissing this flow coordinator.
         self.roomProxy.infoPublisher
@@ -547,6 +569,9 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
             case (_, .presentTransferOwnershipScreen, .transferOwnershipScreen):
                 presentTransferOwnershipScreen()
                 
+            case (_, .presentTasksBoard(let initialThreadID), .tasksBoard): // matcha
+                startTasksBoardFlow(initialThreadID: initialThreadID, animated: animated)
+                
             default:
                 break
             }
@@ -665,7 +690,8 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         self.timelineController = timelineController
         
         let completionSuggestionService = CompletionSuggestionService(roomProxy: roomProxy,
-                                                                      roomListPublisher: userSession.clientProxy.staticRoomSummaryProvider.roomListPublisher.eraseToAnyPublisher())
+                                                                      roomListPublisher: userSession.clientProxy.staticRoomSummaryProvider.roomListPublisher.eraseToAnyPublisher(),
+                                                                      loadCustomEmojiPacks: loadCustomEmojiPacks) // matcha
         let composerDraftService = ComposerDraftService(roomProxy: roomProxy,
                                                         timelineItemfactory: timelineItemFactory,
                                                         threadRootEventID: nil)
@@ -684,7 +710,8 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
                                                          analytics: flowParameters.analytics,
                                                          composerDraftService: composerDraftService,
                                                          timelineControllerFactory: flowParameters.timelineControllerFactory,
-                                                         userIndicatorController: flowParameters.userIndicatorController)
+                                                         userIndicatorController: flowParameters.userIndicatorController,
+                                                         chatBar: makeChatBar(selection: .general)) // matcha
         
         let coordinator = RoomScreenCoordinator(parameters: parameters)
         coordinator.actions
@@ -749,13 +776,18 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
     
     private func presentThreadList(animated: Bool) async {
         let coordinator = RoomThreadListScreenCoordinator(parameters: .init(threadListServiceProxy: roomProxy.threadListService(),
-                                                                            mediaProvider: userSession.mediaProvider))
+                                                                            mediaProvider: userSession.mediaProvider,
+                                                                            matchaStore: showsMatchaChat ? matchaRoomStore : nil)) // matcha
         
         coordinator.actionsPublisher.sink { [weak self] action in
             guard let self else { return }
             switch action {
             case .presentThread(let threadRootEventID):
-                stateMachine.tryEvent(.presentThread(threadRootEventID: threadRootEventID, focusEventID: nil))
+                if showsMatchaChat { // matcha: a thread opens as the only screen above the chat
+                    showMatchaRoute(.thread(id: threadRootEventID))
+                } else {
+                    stateMachine.tryEvent(.presentThread(threadRootEventID: threadRootEventID, focusEventID: nil))
+                }
             }
         }.store(in: &cancellables)
         
@@ -783,7 +815,8 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         }
         
         let completionSuggestionService = CompletionSuggestionService(roomProxy: roomProxy,
-                                                                      roomListPublisher: userSession.clientProxy.staticRoomSummaryProvider.roomListPublisher.eraseToAnyPublisher())
+                                                                      roomListPublisher: userSession.clientProxy.staticRoomSummaryProvider.roomListPublisher.eraseToAnyPublisher(),
+                                                                      loadCustomEmojiPacks: loadCustomEmojiPacks) // matcha
         let composerDraftService = ComposerDraftService(roomProxy: roomProxy,
                                                         timelineItemfactory: timelineItemFactory,
                                                         threadRootEventID: threadRootEventID)
@@ -800,7 +833,8 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
                                                                             analytics: flowParameters.analytics,
                                                                             composerDraftService: composerDraftService,
                                                                             timelineControllerFactory: flowParameters.timelineControllerFactory,
-                                                                            userIndicatorController: flowParameters.userIndicatorController))
+                                                                            userIndicatorController: flowParameters.userIndicatorController,
+                                                                            chatBar: makeChatBar(selection: .thread(id: threadRootEventID)))) // matcha
         
         coordinator.actions.sink { [weak self] action in
             guard let self else { return }
@@ -926,6 +960,12 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         
         timelineController = nil
         
+        if let matchaRoomStore { // matcha
+            userSession.matchaService.releaseStore(matchaRoomStore)
+            self.matchaRoomStore = nil
+            matchaChat = nil
+        }
+        
         if let spaceRoomListProxy {
             actionsSubject.send(.continueWithSpaceFlow(spaceRoomListProxy))
         } else {
@@ -977,6 +1017,8 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
                 stateMachine.tryEvent(.presentReportRoomScreen)
             case .transferOwnership:
                 stateMachine.tryEvent(.presentTransferOwnershipScreen)
+            case .presentEmojiPack: // matcha
+                EmojiPackScreenCoordinator.push(.room(roomProxy), on: navigationStackCoordinator, flowParameters: flowParameters)
             }
         }
         .store(in: &cancellables)
@@ -1147,7 +1189,9 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         let params = EmojiPickerScreenCoordinatorParameters(mode: .reaction,
                                                             selectedEmojis: selectedEmojis,
                                                             emojiProvider: flowParameters.emojiProvider,
-                                                            continuation: emojiPickerContinuation)
+                                                            continuation: emojiPickerContinuation,
+                                                            loadCustomEmojiPacks: loadCustomEmojiPacks, // matcha
+                                                            mediaProvider: userSession.mediaProvider) // matcha
         let coordinator = EmojiPickerScreenCoordinator(parameters: params)
         
         coordinator.actions.sink { [weak self] action in
@@ -1685,6 +1729,182 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private static let loadingIndicatorID = "\(RoomFlowCoordinator.self)-Loading"
+    
+    // MARK: - Matcha
+    
+    /// matcha: reads the room's custom emoji packs again for the composer's suggestions and the reaction picker; nil while
+    /// custom emoji are off.
+    private var loadCustomEmojiPacks: CustomEmojiPacksLoader? {
+        guard userSession.userSettings.app.matchaWorkspacesEnabled else { return nil }
+        return { [packs = userSession.matchaService.customEmojiPacks, roomID = roomProxy.id] in await packs.refresh(roomID: roomID) }
+    }
+    
+    /// matcha: the chat shows its Matcha features: the workspaces are on, and threads, which named threads need.
+    private var showsMatchaChat: Bool {
+        matchaChat != nil && userSession.userSettings.app.threadsEnabled
+    }
+    
+    /// matcha: the chip bar of a chat screen, whose routes this flow follows; nil while the chat shows no Matcha features.
+    private func makeChatBar(selection: ChatBarSelection) -> ChatBarViewModel? {
+        guard showsMatchaChat, let matchaChat else { return nil }
+        let chatBar = ChatBarViewModel(chat: matchaChat, selection: selection)
+        // Kept by the bar, so a thread screen's subscription ends with the screen instead of piling up in the flow.
+        chatBar.actions
+            .sink { [weak self, weak chatBar] route in
+                // A thread created or archived while room details or pinned messages cover the bar's screen navigates nowhere.
+                guard let self, let chatBar, isOnTop(chatBar) else { return }
+                showMatchaRoute(route)
+            }
+            .store(in: &chatBar.cancellables)
+        return chatBar
+    }
+    
+    /// matcha: the screen drawing `chatBar` is on top of the stack, with no sheet over it.
+    private func isOnTop(_ chatBar: ChatBarViewModel) -> Bool {
+        let top = navigationStackCoordinator.stackCoordinators.last ?? navigationStackCoordinator.rootCoordinator
+        return navigationStackCoordinator.sheetCoordinator == nil && (top as? ChatBarScreen)?.chatBar === chatBar
+    }
+    
+    /// matcha: a thread or All threads opens as the only screen above the chat, so threads never stack and back always returns
+    /// to General (WHATSAPP_DESIGN.md §3.4).
+    private func showMatchaRoute(_ route: ChatBarRoute) {
+        guard roomScreenCoordinator != nil else { return }
+        switch route {
+        case .general:
+            popToRoomScreen(animated: true)
+        case .thread(let id):
+            popToRoomScreen()
+            stateMachine.tryEvent(.presentThread(threadRootEventID: id, focusEventID: nil))
+        case .allThreads:
+            popToRoomScreen()
+            stateMachine.tryEvent(.presentThreadList)
+        case .board(let threadID):
+            presentTasksBoard(initialThreadID: threadID)
+        case .remindMe(let threadID):
+            // ponytail: one sheet at a time, so the next one lets go of the last one's subscription.
+            remindMeSheet = RemindMeScreenCoordinator.present(on: navigationStackCoordinator,
+                                                              parameters: .init(target: RemindMeTarget(threadID: threadID),
+                                                                                roomProxy: roomProxy,
+                                                                                userIndicatorController: flowParameters.userIndicatorController))
+        case .spaceNotes(let spaceID):
+            presentSpaceNotes(spaceID: spaceID)
+        case .newTask:
+            presentNewTask()
+        case .stickers(let threadID):
+            // ponytail: one sheet at a time, so the next one lets go of the last one's subscription.
+            stickerPickerSheet = StickerPickerScreenCoordinator.present(on: navigationStackCoordinator,
+                                                                        parameters: .init(roomProxy: roomProxy,
+                                                                                          threadRootEventID: threadID,
+                                                                                          customEmojiPacks: userSession.matchaService.customEmojiPacks,
+                                                                                          mediaProvider: userSession.mediaProvider,
+                                                                                          userIndicatorController: flowParameters.userIndicatorController))
+        }
+    }
+    
+    /// matcha: the composer's Task: a new task's editor over the chat, as Android's attach sheet; without a board, or the right to
+    /// add to it, the board, whose setup or notice says why.
+    private func presentNewTask() {
+        guard let matchaRoomStore, matchaRoomStore.snapshot.board != nil, matchaRoomStore.snapshot.permissions.canAddTasks else {
+            presentTasksBoard(initialThreadID: nil)
+            return
+        }
+        let sheetStack = NavigationStackCoordinator()
+        let coordinator = TaskEditorScreenCoordinator(parameters: .init(store: matchaRoomStore, target: .new(status: .todo)))
+        // ponytail: one sheet at a time, so the next one lets go of the last one's subscription.
+        taskEditorSheet = coordinator.actionsPublisher
+            .sink { [weak self, weak sheetStack] action in
+                guard let self else { return }
+                switch action {
+                case .close:
+                    navigationStackCoordinator.setSheetCoordinator(nil)
+                case .openThread(let threadRootEventID):
+                    navigationStackCoordinator.setSheetCoordinator(nil)
+                    showMatchaRoute(.thread(id: threadRootEventID))
+                case .remindMe(let target, let cardID):
+                    if let sheetStack {
+                        remindMeSheet = RemindMeScreenCoordinator.present(on: sheetStack,
+                                                                          parameters: .task(target,
+                                                                                            cardID: cardID,
+                                                                                            store: matchaRoomStore,
+                                                                                            userIndicatorController: flowParameters.userIndicatorController))
+                    }
+                }
+            }
+        sheetStack.setRootCoordinator(coordinator)
+        navigationStackCoordinator.setSheetCoordinator(sheetStack)
+    }
+    
+    /// matcha: the space's notes, pushed above whatever shows, as on Android; one at a time, since they open asynchronously.
+    private func presentSpaceNotes(spaceID: String) {
+        guard spaceNotesFlowCoordinator == nil else { return }
+        let flowCoordinator = SpaceNotesFlowCoordinator(entry: .space(spaceID: spaceID, documentID: nil),
+                                                        navigationStackCoordinator: navigationStackCoordinator,
+                                                        contextFactory: userSession.matchaService.notesContextFactory)
+        flowCoordinator.actionsPublisher
+            .sink { [weak self] action in
+                switch action {
+                case .finished:
+                    self?.spaceNotesFlowCoordinator = nil
+                }
+            }
+            .store(in: &cancellables)
+        spaceNotesFlowCoordinator = flowCoordinator
+        flowCoordinator.start(animated: true)
+    }
+    
+    /// matcha: the chat's joined parent spaces, for Space notes in its menus.
+    private func loadMatchaParentSpaces() {
+        guard let matchaChat else { return }
+        Task { [spaceService = userSession.clientProxy.spaceService, roomID = roomProxy.id] in
+            if case .success(let spaces) = await spaceService.joinedParents(childID: roomID) {
+                matchaChat.parentSpaces = spaces
+            }
+        }
+    }
+    
+    /// matcha: shows the chat's task board in place of whatever is above the chat, as Android replaces a thread with the board;
+    /// with `initialThreadID`, the editor of that thread's task. For the top bar's board button and a thread chip's "View task".
+    private func presentTasksBoard(initialThreadID: String?, animated: Bool = true) {
+        popToRoomScreen()
+        stateMachine.tryEvent(.presentTasksBoard(initialThreadID: initialThreadID), userInfo: EventUserInfo(animated: animated))
+    }
+    
+    /// matcha: pushes the chat's task board; a thread it opens takes its place above the chat.
+    private func startTasksBoardFlow(initialThreadID: String?, animated: Bool) {
+        guard let matchaRoomStore else {
+            MXLog.error("The task board needs the room's Matcha store")
+            stateMachine.tryEvent(.dismissTasksBoard)
+            return
+        }
+        let flowCoordinator = TasksBoardFlowCoordinator(store: matchaRoomStore,
+                                                        initialThreadID: initialThreadID,
+                                                        navigationStackCoordinator: navigationStackCoordinator,
+                                                        userIndicatorController: flowParameters.userIndicatorController,
+                                                        chatBar: makeChatBar(selection: .board))
+        flowCoordinator.actionsPublisher
+            .sink { [weak self] action in
+                guard let self else { return }
+                switch action {
+                case .presentThread(let threadRootEventID):
+                    // Popping the board finishes it first, so the thread opens from the room, as the only screen above it.
+                    showMatchaRoute(.thread(id: threadRootEventID))
+                case .finished:
+                    tasksBoardFlowCoordinator = nil
+                    stateMachine.tryEvent(.dismissTasksBoard)
+                }
+            }
+            .store(in: &cancellables)
+        tasksBoardFlowCoordinator = flowCoordinator
+        flowCoordinator.start(animated: animated)
+    }
+    
+    /// matcha: pops every screen above the chat; their dismissal callbacks bring the state machine back to `.room`. Unanimated when
+    /// another screen takes their place.
+    private func popToRoomScreen(animated: Bool = false) {
+        if let roomScreenCoordinator {
+            navigationStackCoordinator.pop(to: roomScreenCoordinator, animated: animated)
+        }
+    }
     
     private func showLoadingIndicator(delay: Duration? = nil,
                                       title: String = L10n.commonLoading,

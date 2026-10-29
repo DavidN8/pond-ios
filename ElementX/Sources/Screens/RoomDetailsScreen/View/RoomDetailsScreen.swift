@@ -228,6 +228,13 @@ struct RoomDetailsScreen: View {
                             context.send(viewAction: .processTapSecurityAndPrivacy)
                         })
             }
+            
+            if context.viewState.isEmojiPackVisible { // matcha
+                ListRow(label: .default(title: UntranslatedL10n.screenMatchaEmojiTitle, icon: \.reaction),
+                        kind: .navigationLink {
+                            context.send(viewAction: .processTapEmojiPack)
+                        })
+            }
         }
     }
     

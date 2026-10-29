@@ -30,6 +30,9 @@ struct RoomThreadListItem: Identifiable {
     let latestMessageDetails: MessageDetails?
     
     let numberOfReplies: UInt
+    
+    /// matcha: what the Matcha room store reads of the thread; nil for items not built from the SDK.
+    var matcha: MatchaListedThread?
 }
 
 enum RoomThreadListPaginationState: Equatable {

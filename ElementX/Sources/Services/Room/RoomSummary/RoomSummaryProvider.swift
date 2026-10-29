@@ -261,6 +261,8 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
     }
     
     fileprivate func updateRoomsWithDiffs(_ diffs: [RoomListEntriesUpdate]) async {
+        guard !diffs.isEmpty else { return await rebuildRoomSummaries() } // matcha: a notification settings change
+        
         // Building the room summaries (SDK fetches + string building) and applying the
         // CollectionDifference can be expensive, so compute off the main actor and only
         // hop back to publish the result.
@@ -397,7 +399,8 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
                            activeCallIntent: activeCallIntent.map { .init(rustCallIntent: $0) },
                            isMarkedUnread: roomInfo.isMarkedUnread,
                            isFavourite: roomInfo.isFavourite,
-                           isTombstoned: roomInfo.successorRoom != nil)
+                           isTombstoned: roomInfo.successorRoom != nil,
+                           isDM: roomInfo.isDm) // matcha
     }
     
     private nonisolated static func buildDiff(from diff: RoomListEntriesUpdate, on rooms: [RoomSummary], eventStringBuilder: RoomEventStringBuilder) async -> CollectionDifference<RoomSummary>? {
@@ -462,12 +465,14 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
     private func setupNotificationSettingsSubscription() {
         notificationSettings.callbacks
             .receive(on: DispatchQueue.main)
-            .dropFirst() // drop the first one to avoid rebuilding the summaries during the first synchronization
+            // matcha: the first change rebuilds too. The SDK fills a room's cached notification mode when push rules sync and tells
+            // the list nothing, so dropping it hid the first Mute of a session (a chat row's swipe). Queued with the diffs (an empty
+            // batch) so a rebuild never races them, which is what the drop was for.
             .sink { [weak self] callback in
                 guard let self else { return }
                 switch callback {
                 case .settingsDidChange:
-                    Task { await self.rebuildRoomSummaries() }
+                    diffsContinuation.yield([]) // matcha
                 }
             }
             .store(in: &cancellables)

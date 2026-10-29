@@ -14,7 +14,7 @@ final class RoomListFiltersStateTests {
     var userSettings: UserSettings
     var state: RoomListFiltersState
     /// The filters that aren't hidden behind a feature flag.
-    let defaultFilters = RoomListFilter.allCases.filter { $0 != .mentions && $0 != .lowPriority }
+    let defaultFilters = RoomListFilter.availableFilters.filter { $0 != .mentions && $0 != .lowPriority } // matcha: availableFilters
     
     init() {
         userSettings = UserSettings.mock()
@@ -26,6 +26,7 @@ final class RoomListFiltersStateTests {
         #expect(!state.isFiltering)
         #expect(state.activeFilters == [])
         #expect(state.availableFilters == defaultFilters)
+        #expect(state.availableFilters.first == .favourites) // matcha: as on Android and the web client
     }
     
     @Test
@@ -33,7 +34,7 @@ final class RoomListFiltersStateTests {
         state.activateFilter(.unreads)
         #expect(state.isFiltering)
         #expect(state.activeFilters == [.unreads])
-        #expect(state.availableFilters == [.favourites, .people, .rooms])
+        #expect(state.availableFilters == [.favourites, .rooms, .people]) // matcha: Android's order
         state.deactivateFilter(.unreads)
         #expect(!state.isFiltering)
         #expect(state.activeFilters == [])
@@ -45,7 +46,7 @@ final class RoomListFiltersStateTests {
         state.activateFilter(.people)
         #expect(state.isFiltering)
         #expect(state.activeFilters == [.people])
-        #expect(state.availableFilters == [.unreads, .favourites])
+        #expect(state.availableFilters == [.favourites, .unreads]) // matcha: Favourites first
         
         state.deactivateFilter(.people)
         #expect(!state.isFiltering)
@@ -55,7 +56,7 @@ final class RoomListFiltersStateTests {
         state.activateFilter(.rooms)
         #expect(state.isFiltering)
         #expect(state.activeFilters == [.rooms])
-        #expect(state.availableFilters == [.unreads, .favourites])
+        #expect(state.availableFilters == [.favourites, .unreads]) // matcha: Favourites first
         
         state.activateFilter(.unreads)
         #expect(state.isFiltering)
@@ -75,7 +76,7 @@ final class RoomListFiltersStateTests {
     func clearFilters() {
         state.activateFilter(.people)
         #expect(state.activeFilters == [.people])
-        #expect(state.availableFilters == [.unreads, .favourites])
+        #expect(state.availableFilters == [.favourites, .unreads]) // matcha: Favourites first
         
         state.activateFilter(.unreads)
         #expect(state.activeFilters == [.people, .unreads])
@@ -95,7 +96,7 @@ final class RoomListFiltersStateTests {
     func order() {
         state.activateFilter(.favourites)
         #expect(state.activeFilters == [.favourites])
-        #expect(state.availableFilters == [.unreads, .people, .rooms])
+        #expect(state.availableFilters == [.unreads, .rooms, .people]) // matcha: Android's order
         
         state.deactivateFilter(.favourites)
         #expect(state.activeFilters == [])
@@ -103,7 +104,7 @@ final class RoomListFiltersStateTests {
         
         state.activateFilter(.rooms)
         #expect(state.activeFilters == [.rooms])
-        #expect(state.availableFilters == [.unreads, .favourites])
+        #expect(state.availableFilters == [.favourites, .unreads]) // matcha: Favourites first
         
         state.activateFilter(.unreads)
         #expect(state.activeFilters == [.rooms, .unreads])
@@ -111,7 +112,7 @@ final class RoomListFiltersStateTests {
         
         state.deactivateFilter(.unreads)
         #expect(state.activeFilters == [.rooms])
-        #expect(state.availableFilters == [.unreads, .favourites])
+        #expect(state.availableFilters == [.favourites, .unreads]) // matcha: Favourites first
     }
     
     // MARK: Low Priority feature flag
@@ -126,7 +127,7 @@ final class RoomListFiltersStateTests {
         
         state.activateFilter(.lowPriority)
         #expect(state.activeFilters == [.lowPriority])
-        #expect(state.availableFilters == [.unreads, .people, .rooms])
+        #expect(state.availableFilters == [.unreads, .rooms, .people]) // matcha: Android's order
     }
     
     // MARK: Mentions feature flag
@@ -137,12 +138,12 @@ final class RoomListFiltersStateTests {
         enableMentionsFeature()
         #expect(!state.isFiltering)
         #expect(state.activeFilters == [])
-        #expect(state.availableFilters == [.unreads, .mentions, .favourites, .people, .rooms, .invites])
+        #expect(state.availableFilters == [.favourites, .unreads, .mentions, .rooms, .people, .invites]) // matcha: Android's order
         
         state.activateFilter(.mentions)
         #expect(state.isFiltering)
         #expect(state.activeFilters == [.mentions])
-        #expect(state.availableFilters == [.unreads, .favourites, .people, .rooms])
+        #expect(state.availableFilters == [.favourites, .unreads, .rooms, .people]) // matcha: Android's order
     }
     
     // MARK: - Helpers

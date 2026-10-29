@@ -182,5 +182,12 @@ extension ClientProxyMock {
         storeSizesReturnValue = .success(.init(cryptoStore: 1, stateStore: 9, eventCacheStore: 8, mediaStore: 6, searchIndex: 5))
         
         configurePresenceSendImmediatelyReturnValue = .success(())
+        roomInfoRoomIDReturnValue = .failure(.roomNotInLocalStore) // matcha: the Notes tab's reader, which the home tabs start
+        accountDataJSONTypeReturnValue = .success(nil) // matcha: custom emoji packs, which timelines read ahead
+        stateEventsJSONRoomIDTypeReturnValue = .success([:])
+        fetchStateEventContentJSONRoomIDTypeStateKeyReturnValue = .success(nil)
+        // A room's whole state can't be read unless a test serves it, so packs come from the store and the per-key reads.
+        fetchStateEventsJSONRoomIDTypeReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
+        setAccountDataTypeContentJSONReturnValue = .success(())
     }
 }

@@ -10621,6 +10621,100 @@ open class RoomSDKMock: MatrixRustSDK.Room, @unchecked Sendable {
         }
     }
 
+    //MARK: - fetchRelationsJson
+
+    open var fetchRelationsJsonEventIdRelationTypeFromLimitThrowableError: Error?
+    private let fetchRelationsJsonEventIdRelationTypeFromLimitCallsCountLock = NSLock()
+    private var fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingCallsCount = 0
+    open var fetchRelationsJsonEventIdRelationTypeFromLimitCallsCount: Int {
+        get { fetchRelationsJsonEventIdRelationTypeFromLimitCallsCountLock.withLock { fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingCallsCount } }
+        set { fetchRelationsJsonEventIdRelationTypeFromLimitCallsCountLock.withLock { fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingCallsCount = newValue } }
+    }
+    open var fetchRelationsJsonEventIdRelationTypeFromLimitCalled: Bool {
+        return fetchRelationsJsonEventIdRelationTypeFromLimitCallsCount > 0
+    }
+    private let fetchRelationsJsonEventIdRelationTypeFromLimitReceivedArgumentsLock = NSLock()
+    private var fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingReceivedArguments: (eventId: String, relationType: RelationType, from: String?, limit: UInt32)?
+    open var fetchRelationsJsonEventIdRelationTypeFromLimitReceivedArguments: (eventId: String, relationType: RelationType, from: String?, limit: UInt32)? {
+        get { fetchRelationsJsonEventIdRelationTypeFromLimitReceivedArgumentsLock.withLock { fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingReceivedArguments } }
+        set { fetchRelationsJsonEventIdRelationTypeFromLimitReceivedArgumentsLock.withLock { fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingReceivedArguments = newValue } }
+    }
+    private let fetchRelationsJsonEventIdRelationTypeFromLimitReceivedInvocationsLock = NSLock()
+    private var fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingReceivedInvocations: [(eventId: String, relationType: RelationType, from: String?, limit: UInt32)] = []
+    open var fetchRelationsJsonEventIdRelationTypeFromLimitReceivedInvocations: [(eventId: String, relationType: RelationType, from: String?, limit: UInt32)] {
+        get { fetchRelationsJsonEventIdRelationTypeFromLimitReceivedInvocationsLock.withLock { fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingReceivedInvocations } }
+        set { fetchRelationsJsonEventIdRelationTypeFromLimitReceivedInvocationsLock.withLock { fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingReceivedInvocations = newValue } }
+    }
+
+    private let fetchRelationsJsonEventIdRelationTypeFromLimitReturnValueLock = NSLock()
+    open var fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingReturnValue: RelationsJsonPage!
+    open var fetchRelationsJsonEventIdRelationTypeFromLimitReturnValue: RelationsJsonPage! {
+        get { fetchRelationsJsonEventIdRelationTypeFromLimitReturnValueLock.withLock { fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingReturnValue } }
+        set { fetchRelationsJsonEventIdRelationTypeFromLimitReturnValueLock.withLock { fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingReturnValue = newValue } }
+    }
+    open var fetchRelationsJsonEventIdRelationTypeFromLimitClosure: ((String, RelationType, String?, UInt32) async throws -> RelationsJsonPage)?
+
+    open override func fetchRelationsJson(eventId: String, relationType: RelationType, from: String?, limit: UInt32) async throws -> RelationsJsonPage {
+        if let error = fetchRelationsJsonEventIdRelationTypeFromLimitThrowableError {
+            throw error
+        }
+        fetchRelationsJsonEventIdRelationTypeFromLimitCallsCountLock.withLock { fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingCallsCount += 1 }
+        fetchRelationsJsonEventIdRelationTypeFromLimitReceivedArguments = (eventId: eventId, relationType: relationType, from: from, limit: limit)
+        fetchRelationsJsonEventIdRelationTypeFromLimitReceivedInvocationsLock.withLock { fetchRelationsJsonEventIdRelationTypeFromLimitUnderlyingReceivedInvocations.append((eventId: eventId, relationType: relationType, from: from, limit: limit)) }
+        if let fetchRelationsJsonEventIdRelationTypeFromLimitClosure = fetchRelationsJsonEventIdRelationTypeFromLimitClosure {
+            return try await fetchRelationsJsonEventIdRelationTypeFromLimitClosure(eventId, relationType, from, limit)
+        } else {
+            return fetchRelationsJsonEventIdRelationTypeFromLimitReturnValue
+        }
+    }
+
+    //MARK: - fetchStateEventContentJson
+
+    open var fetchStateEventContentJsonEventTypeStateKeyThrowableError: Error?
+    private let fetchStateEventContentJsonEventTypeStateKeyCallsCountLock = NSLock()
+    private var fetchStateEventContentJsonEventTypeStateKeyUnderlyingCallsCount = 0
+    open var fetchStateEventContentJsonEventTypeStateKeyCallsCount: Int {
+        get { fetchStateEventContentJsonEventTypeStateKeyCallsCountLock.withLock { fetchStateEventContentJsonEventTypeStateKeyUnderlyingCallsCount } }
+        set { fetchStateEventContentJsonEventTypeStateKeyCallsCountLock.withLock { fetchStateEventContentJsonEventTypeStateKeyUnderlyingCallsCount = newValue } }
+    }
+    open var fetchStateEventContentJsonEventTypeStateKeyCalled: Bool {
+        return fetchStateEventContentJsonEventTypeStateKeyCallsCount > 0
+    }
+    private let fetchStateEventContentJsonEventTypeStateKeyReceivedArgumentsLock = NSLock()
+    private var fetchStateEventContentJsonEventTypeStateKeyUnderlyingReceivedArguments: (eventType: String, stateKey: String)?
+    open var fetchStateEventContentJsonEventTypeStateKeyReceivedArguments: (eventType: String, stateKey: String)? {
+        get { fetchStateEventContentJsonEventTypeStateKeyReceivedArgumentsLock.withLock { fetchStateEventContentJsonEventTypeStateKeyUnderlyingReceivedArguments } }
+        set { fetchStateEventContentJsonEventTypeStateKeyReceivedArgumentsLock.withLock { fetchStateEventContentJsonEventTypeStateKeyUnderlyingReceivedArguments = newValue } }
+    }
+    private let fetchStateEventContentJsonEventTypeStateKeyReceivedInvocationsLock = NSLock()
+    private var fetchStateEventContentJsonEventTypeStateKeyUnderlyingReceivedInvocations: [(eventType: String, stateKey: String)] = []
+    open var fetchStateEventContentJsonEventTypeStateKeyReceivedInvocations: [(eventType: String, stateKey: String)] {
+        get { fetchStateEventContentJsonEventTypeStateKeyReceivedInvocationsLock.withLock { fetchStateEventContentJsonEventTypeStateKeyUnderlyingReceivedInvocations } }
+        set { fetchStateEventContentJsonEventTypeStateKeyReceivedInvocationsLock.withLock { fetchStateEventContentJsonEventTypeStateKeyUnderlyingReceivedInvocations = newValue } }
+    }
+
+    private let fetchStateEventContentJsonEventTypeStateKeyReturnValueLock = NSLock()
+    open var fetchStateEventContentJsonEventTypeStateKeyUnderlyingReturnValue: String?
+    open var fetchStateEventContentJsonEventTypeStateKeyReturnValue: String? {
+        get { fetchStateEventContentJsonEventTypeStateKeyReturnValueLock.withLock { fetchStateEventContentJsonEventTypeStateKeyUnderlyingReturnValue } }
+        set { fetchStateEventContentJsonEventTypeStateKeyReturnValueLock.withLock { fetchStateEventContentJsonEventTypeStateKeyUnderlyingReturnValue = newValue } }
+    }
+    open var fetchStateEventContentJsonEventTypeStateKeyClosure: ((String, String) async throws -> String?)?
+
+    open override func fetchStateEventContentJson(eventType: String, stateKey: String) async throws -> String? {
+        if let error = fetchStateEventContentJsonEventTypeStateKeyThrowableError {
+            throw error
+        }
+        fetchStateEventContentJsonEventTypeStateKeyCallsCountLock.withLock { fetchStateEventContentJsonEventTypeStateKeyUnderlyingCallsCount += 1 }
+        fetchStateEventContentJsonEventTypeStateKeyReceivedArguments = (eventType: eventType, stateKey: stateKey)
+        fetchStateEventContentJsonEventTypeStateKeyReceivedInvocationsLock.withLock { fetchStateEventContentJsonEventTypeStateKeyUnderlyingReceivedInvocations.append((eventType: eventType, stateKey: stateKey)) }
+        if let fetchStateEventContentJsonEventTypeStateKeyClosure = fetchStateEventContentJsonEventTypeStateKeyClosure {
+            return try await fetchStateEventContentJsonEventTypeStateKeyClosure(eventType, stateKey)
+        } else {
+            return fetchStateEventContentJsonEventTypeStateKeyReturnValue
+        }
+    }
+
     //MARK: - fetchThreadSubscription
 
     open var fetchThreadSubscriptionThreadRootEventIdThrowableError: Error?

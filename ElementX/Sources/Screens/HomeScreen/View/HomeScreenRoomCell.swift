@@ -18,9 +18,17 @@ struct HomeScreenRoomCell: View {
     let room: HomeScreenRoom
     let isSelected: Bool
     let mediaProvider: MediaProviderProtocol!
+    /// matcha: a space's channel on the Channels tab, Android's compact row: a smaller avatar, less padding, a one-line message.
+    var isCompact = false
+    /// matcha: the Channels tab lets names take two lines at accessibility sizes.
+    var nameLineLimit = 1
     let action: (HomeScreenViewAction) -> Void
     
-    private let verticalInsets = 12.0
+    // matcha: compact rows have less padding.
+    private var verticalInsets: Double {
+        isCompact ? 8 : 12
+    }
+    
     private let horizontalInsets = 16.0
     
     var body: some View {
@@ -48,7 +56,7 @@ struct HomeScreenRoomCell: View {
     private var avatar: some View {
         if dynamicTypeSize < .accessibility3 {
             RoomAvatarImage(avatar: room.avatar,
-                            avatarSize: .room(on: .chats),
+                            avatarSize: isCompact ? .custom(40) : .room(on: .chats), // matcha: compact
                             mediaProvider: mediaProvider)
                 .dynamicTypeSize(dynamicTypeSize < .accessibility1 ? dynamicTypeSize : .accessibility1)
                 .accessibilityHidden(true)
@@ -76,7 +84,7 @@ struct HomeScreenRoomCell: View {
         HStack(alignment: .top, spacing: 16) {
             HStack(spacing: 4) {
                 Text(room.name)
-                    .lineLimit(1)
+                    .lineLimit(nameLineLimit) // matcha: was 1
                 
                 if let statusEmoji = room.statusEmoji {
                     Text(String(statusEmoji))
@@ -98,7 +106,7 @@ struct HomeScreenRoomCell: View {
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             ZStack(alignment: .topLeading) {
                 // Hidden text with 2 lines to maintain consistent height, scaling with dynamic text.
-                Text(" \n ")
+                Text(isCompact ? " " : " \n ") // matcha: compact
                     .lastMessageFormatting(hasFailed: false)
                     .hidden()
                     .environment(\.redactionReasons, []) // Always maintain consistent height
@@ -170,7 +178,7 @@ struct HomeScreenRoomCell: View {
         if let displayedLastMessage = room.displayedLastMessage {
             Text(displayedLastMessage)
                 .font(.compound.bodyMD)
-                .lastMessageFormatting(hasFailed: room.lastMessageState == .failed)
+                .lastMessageFormatting(hasFailed: room.lastMessageState == .failed, lineLimit: isCompact ? 1 : 2) // matcha: compact
         }
     }
 }
@@ -187,9 +195,9 @@ struct HomeScreenRoomCellButtonStyle: ButtonStyle {
 }
 
 private extension View {
-    func lastMessageFormatting(hasFailed: Bool) -> some View {
+    func lastMessageFormatting(hasFailed: Bool, lineLimit: Int = 2) -> some View { // matcha: lineLimit
         foregroundColor(hasFailed ? .compound.textCriticalPrimary : .compound.textSecondary)
-            .lineLimit(2)
+            .lineLimit(lineLimit)
             .multilineTextAlignment(.leading)
     }
 }

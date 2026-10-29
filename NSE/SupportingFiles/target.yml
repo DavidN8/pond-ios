@@ -62,7 +62,8 @@ targets:
     entitlements:
       path: NSE.entitlements
       properties:
-        com.apple.developer.usernotifications.filtering: true
+        # matcha: restore when Apple grants the filtering entitlement (I13); until then device and TestFlight provisioning fails with it.
+        # com.apple.developer.usernotifications.filtering: true
         com.apple.security.application-groups:
         - $(APP_GROUP_IDENTIFIER)
         keychain-access-groups:
@@ -71,6 +72,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: NSE
+        TARGETED_DEVICE_FAMILY: "1" # matcha: as the app
         PRODUCT_DISPLAY_NAME: $(APP_DISPLAY_NAME)
         PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.nse
         MARKETING_VERSION: $(MARKETING_VERSION)
@@ -120,6 +122,8 @@ targets:
     - path: ../../ElementX/Sources/Other/Pills/PlainMentionBuilder.swift
     - path: ../../ElementX/Sources/Other/SDKListener.swift
     - path: ../../ElementX/Sources/Other/SwiftUI/Views/PlaceholderAvatarImage.swift
+    - path: ../../ElementX/Sources/Matcha/Reskin/MatchaColors.swift # matcha: the avatar colours of PlaceholderAvatarImage
+    - path: ../../ElementX/Sources/Matcha/CustomEmoji/Emoticons.swift # matcha: custom emoji read as their alt text
     - path: ../../ElementX/Sources/Other/TestablePreview/TestablePreview.swift
     - path: ../../ElementX/Sources/Other/UserAgentBuilder.swift
     - path: ../../ElementX/Sources/Services/AlertTones/NotificationTone.swift

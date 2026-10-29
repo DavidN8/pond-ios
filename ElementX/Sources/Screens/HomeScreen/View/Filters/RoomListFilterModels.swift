@@ -25,7 +25,10 @@ enum RoomListFilter: Int, CaseIterable, Identifiable {
     case lowPriority
     
     static var availableFilters: [RoomListFilter] {
-        RoomListFilter.allCases
+        // matcha: Android's order, Favourites · Unread · Rooms · People (Favourites first as in the Matcha web client); the raw
+        // values aren't stored, but keep them.
+        let matchaOrder: [RoomListFilter] = [.favourites, .unreads, .mentions, .rooms, .people]
+        return matchaOrder + RoomListFilter.allCases.filter { !matchaOrder.contains($0) }
     }
     
     var localizedName: String {

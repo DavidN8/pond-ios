@@ -400,7 +400,56 @@ final class RoomFlowCoordinatorTests {
         #expect(navigationStackCoordinator.stackCoordinators.first is SpaceScreenCoordinator)
     }
     
+    // MARK: - Matcha
+    
+    @Test
+    func tasksBoardRoutes() async throws {
+        userSettings.app.threadsEnabled = true
+        setupRoomFlowCoordinator()
+        try await processExpectingNewRootCoordinator(route: .room(roomID: "1", via: []))
+        let chatBar = try #require((navigationStackCoordinator.rootCoordinator as? RoomScreenCoordinator)?.chatBar)
+        
+        // The top bar's board button pushes the board above the chat.
+        try await send(chatBar, .board, expectingStack: ["TasksBoardScreenCoordinator"])
+        // A thread opened from the board's own chip bar takes its place, as the only screen above the chat. A covered screen's
+        // bar routes nowhere, so each step goes through the bar on top.
+        try await send(topChatBar(), .select(.thread(id: "$thread")), expectingStack: ["ThreadTimelineScreenCoordinator"])
+        // The board takes the thread's place in turn.
+        try await send(topChatBar(), .board, expectingStack: ["TasksBoardScreenCoordinator"])
+        
+        // Another route pops the board, and the flow is back on the chat: the board opens again.
+        try await process(route: .room(roomID: "1", via: []), expectedStackCount: 0)
+        try await send(chatBar, .board, expectingStack: ["TasksBoardScreenCoordinator"])
+    }
+    
+    @Test
+    func remindMeRoute() async throws {
+        userSettings.app.threadsEnabled = true
+        setupRoomFlowCoordinator()
+        try await processExpectingNewRootCoordinator(route: .room(roomID: "1", via: []))
+        let chatBar = try #require((navigationStackCoordinator.rootCoordinator as? RoomScreenCoordinator)?.chatBar)
+        try await deferFulfillment(chatBar.context.observe(\.viewState.canRemind)) { $0 }.fulfill()
+        
+        let deferredSheet = deferFulfillment(navigationStackCoordinator.observe(\.sheetCoordinatorID)) { $0 != nil }
+        chatBar.context.send(viewAction: .remindMe(threadID: nil))
+        try await deferredSheet.fulfill()
+        #expect((navigationStackCoordinator.sheetCoordinator as? NavigationStackCoordinator)?.rootCoordinator is RemindMeScreenCoordinator)
+        #expect(navigationStackCoordinator.stackCoordinators.isEmpty)
+    }
+    
     // MARK: - Private
+    
+    /// The chip bar of the screen on top of the chat.
+    private func topChatBar() throws -> ChatBarViewModel {
+        try #require((navigationStackCoordinator.stackCoordinators.last as? ChatBarScreen)?.chatBar)
+    }
+    
+    /// Sends a chip bar action and waits for the screens above the chat to be `stack`, by type name.
+    private func send(_ chatBar: ChatBarViewModel, _ action: ChatBarViewAction, expectingStack stack: [String]) async throws {
+        let deferred = deferFulfillment(navigationStackCoordinator.observe(\.stackTypeNames)) { $0 == stack }
+        chatBar.context.send(viewAction: action)
+        try await deferred.fulfill()
+    }
     
     /// Handles the route and waits for the navigation stack's root coordinator to be replaced,
     /// which happens asynchronously after the route has been handled.
@@ -544,4 +593,11 @@ final class RoomFlowCoordinatorTests {
 
 private enum RoomType {
     case invited(roomID: String)
+}
+
+private extension NavigationStackCoordinator {
+    /// matcha: the type names of the screens above the root, a Sendable projection to wait for a route's navigation.
+    var stackTypeNames: [String] {
+        stackCoordinators.map { String(describing: type(of: $0)) }
+    }
 }

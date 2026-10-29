@@ -1,0 +1,27 @@
+{
+    "op": "kanban.thread_card_id",
+    "description": "The card id of a thread's card: thread- followed by the lowercase SHA-256 hex of the UTF-8 thread root id.",
+    "cases": [
+        {
+            "name": "a short id",
+            "input": {
+                "threadId": "$abc"
+            },
+            "expect": "thread-896f8c657f9fa111b8dbef8fd2b536b3b2dad5977bb9131dd920378e53a7ad7c"
+        },
+        {
+            "name": "a room version 4+ event id",
+            "input": {
+                "threadId": "$Rqnc-F-dvnEYJTyHq_iKxU2bZ1CI92-kuZq3a5lr5Zg"
+            },
+            "expect": "thread-4f27d015e6fa85c5e36694d3c485dbabe64d37a18022ddb2abf72df859c786ca"
+        },
+        {
+            "name": "non-ASCII is hashed as UTF-8",
+            "input": {
+                "threadId": "$ünïcode🚀"
+            },
+            "expect": "thread-92eca6064e1477545ee1dc23f1d285d1e814e070276bb3542bc8a216bfef44b6"
+        }
+    ]
+}

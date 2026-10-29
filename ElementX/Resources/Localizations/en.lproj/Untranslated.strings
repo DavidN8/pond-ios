@@ -1,3 +1,4 @@
+"a11y_matcha_message_read" = "Read";
 "soft_logout_clear_data_dialog_content" = "Clear all data currently stored on this device?\nSign in again to access your account data and messages.";
 "soft_logout_clear_data_dialog_title" = "Clear data";
 "soft_logout_clear_data_notice" = "Warning: Your personal data (including encryption keys) is still stored on this device.\n\nClear it if you’re finished using this device, or want to sign in to another account.";
@@ -7,3 +8,269 @@
 "soft_logout_signin_notice" = "Your homeserver (%1$s) admin has signed you out of your account %2$s (%3$s).";
 "soft_logout_signin_title" = "Sign in";
 "untranslated" = "Untranslated";
+"action_matcha_archive" = "Archive";
+"action_matcha_unarchive" = "Unarchive";
+"action_matcha_undo" = "Undo";
+"a11y_matcha_thread_archived" = "Archived thread";
+"common_matcha_active" = "Active";
+"common_matcha_all_threads" = "All threads";
+"common_matcha_archived" = "Archived";
+/* Localazy: change %1$@ -> %1$s */
+"common_matcha_error_max_chars" = "Use up to %1$@ characters";
+"common_matcha_error_name_empty" = "Enter a name";
+"common_matcha_more" = "More";
+"common_matcha_new_thread" = "New thread";
+"common_matcha_tasks" = "Tasks";
+"common_matcha_thread_untitled" = "Untitled thread";
+"common_matcha_write_failed" = "Couldn't save. Check your connection and try again.";
+"screen_matcha_threads_archived_snackbar" = "Thread archived";
+"screen_matcha_threads_create_failed" = "Couldn't create the thread. Check your connection and try again.";
+"screen_matcha_threads_general" = "General";
+"screen_matcha_threads_list_archived_empty" = "No archived threads";
+"screen_matcha_threads_list_empty_body" = "Start one with New thread.";
+"screen_matcha_threads_list_empty_title" = "No threads yet";
+"screen_matcha_threads_name_helper" = "Everyone in this chat can see the name.";
+"screen_matcha_threads_name_hint" = "Thread name";
+"screen_matcha_threads_rename_title" = "Rename thread";
+"screen_matcha_threads_setup_failed" = "Message sent, but the thread couldn't be set up. Try again.";
+"screen_matcha_threads_unarchived_snackbar" = "Thread unarchived";
+"screen_matcha_threads_view_task" = "View task";
+"screen_matcha_threads_warning_access" = "You can't see thread names from before you joined.";
+"screen_matcha_threads_warning_history" = "Older thread names aren't available on this device.";
+"screen_matcha_threads_warning_network" = "Thread names may be out of date. Check your connection.";
+"screen_matcha_threads_warning_undecryptable" = "Some thread names can't be read on this device yet.";
+"screen_matcha_room_attach_task" = "Task";
+"screen_matcha_room_typing_dm" = "typing…";
+/* matcha: the task board (I7). Shared keys first; the threads track may add the same ones. */
+/* Localazy: change %1$@ -> %1$s */
+"a11y_matcha_task_due" = "Due %1$@";
+"a11y_matcha_task_reminder" = "Reminder requested";
+"a11y_matcha_task_shown_to_room" = "Shown to everyone in the channel";
+/* Localazy: change %1$@ -> %1$s */
+"a11y_matcha_task_status" = "Status: %1$@";
+"action_matcha_keep_editing" = "Keep editing";
+/* Localazy: change %1$@ -> %1$s, %2$@ -> %2$s */
+"common_matcha_day_and_time" = "%1$@ %2$@";
+"screen_matcha_tasks_add" = "Add task";
+"screen_matcha_tasks_already_has_board" = "This chat already has a task board.";
+"screen_matcha_tasks_archived_empty" = "No archived tasks";
+"screen_matcha_tasks_archived_snackbar" = "Task archived";
+"screen_matcha_tasks_archived_title" = "Archived tasks";
+"screen_matcha_tasks_board_changed" = "The task board changed. Try again.";
+"screen_matcha_tasks_board_empty_body" = "Tap + to add the first one.";
+"screen_matcha_tasks_board_empty_title" = "No tasks yet";
+"screen_matcha_tasks_deadline_label" = "Deadline";
+"screen_matcha_tasks_deadline_past" = "This time has already passed";
+"screen_matcha_tasks_deadline_range" = "Pick a date before the year 10,000";
+"screen_matcha_tasks_deadline_skipped" = "This time doesn't exist here because the clocks change. Pick another time.";
+"screen_matcha_tasks_description_hint" = "Add a description";
+"screen_matcha_tasks_discard_title" = "Discard changes?";
+"screen_matcha_tasks_edit" = "Edit task";
+"screen_matcha_tasks_history_incomplete" = "Couldn't load this task's earlier changes. Check your connection and try again.";
+"screen_matcha_tasks_load_older" = "Load older tasks";
+"screen_matcha_tasks_looking" = "Looking for this chat's task board…";
+"screen_matcha_tasks_move_to" = "Move to";
+"screen_matcha_tasks_name_hint" = "Task name";
+"screen_matcha_tasks_new" = "New task";
+"screen_matcha_tasks_no_replies" = "No replies yet";
+"screen_matcha_tasks_open_thread" = "Open thread";
+"screen_matcha_tasks_overdue" = "Overdue";
+"screen_matcha_tasks_read_only" = "You can see these tasks but can't change them.";
+/* Localazy: change %1$@ -> %1$s */
+"screen_matcha_tasks_reminder_requested" = "Reminder requested for %1$@";
+"screen_matcha_tasks_rename_not_allowed" = "You can't rename threads in this chat, so this name can't change.";
+"screen_matcha_tasks_setup_action" = "Create task board";
+"screen_matcha_tasks_setup_body" = "Every thread in this chat becomes a task, and each new task gets its own thread.";
+"screen_matcha_tasks_setup_failed" = "Couldn't create the task board. Try again.";
+"screen_matcha_tasks_setup_no_permission" = "Ask an admin to create the task board.";
+"screen_matcha_tasks_setup_title" = "Track work in this chat";
+"screen_matcha_tasks_show_to_room" = "Show to everyone in channel";
+"screen_matcha_tasks_show_to_room_hint" = "Controls visibility on this board. Channel members can still read the linked conversation.";
+"screen_matcha_tasks_status_doing" = "In progress";
+"screen_matcha_tasks_status_done" = "Done";
+"screen_matcha_tasks_status_label" = "Status";
+"screen_matcha_tasks_status_todo" = "To do";
+"screen_matcha_tasks_thread_has_task" = "This thread already has a task.";
+"screen_matcha_tasks_thread_note_linked" = "Renaming the task also renames its thread.";
+"screen_matcha_tasks_thread_note_new" = "A thread with this name will be created in this chat.";
+"screen_matcha_tasks_unarchived_snackbar" = "Task unarchived";
+"screen_matcha_tasks_unreadable" = "Some task updates can't be decrypted. This list may be out of date.";
+/* matcha: the Tasks tab and a space's boards (I8). */
+"a11y_matcha_tasks_show_list" = "Show as list";
+"a11y_matcha_tasks_show_table" = "Show as table";
+"a11y_matcha_tasks_sorted_ascending" = "Sorted ascending";
+"a11y_matcha_tasks_sorted_descending" = "Sorted descending";
+"a11y_state_collapsed" = "Collapsed";
+"a11y_state_expanded" = "Expanded";
+"common_matcha_all" = "All";
+"screen_matcha_space_boards_empty_body" = "Tasks from this space's channels show up here.";
+"screen_matcha_space_boards_title" = "Boards";
+"screen_matcha_tasks_all_people" = "Everyone I work with";
+/* Localazy: change %1$@ -> %1$s, %2$@ -> %2$s */
+"screen_matcha_tasks_chat_and_summary" = "%1$@ · %2$@";
+"screen_matcha_tasks_filter_chat" = "Chat";
+"screen_matcha_tasks_filter_people" = "People";
+"screen_matcha_tasks_filter_people_title" = "Filter by person";
+/* Localazy: change %1$@ -> %1$s */
+"screen_matcha_tasks_in_chat" = "In %1$@";
+"screen_matcha_tasks_just_you" = "Just you";
+"screen_matcha_tasks_open_chat" = "Open chat";
+"screen_matcha_tasks_pick_chat_empty" = "None of your chats has a task board yet.";
+"screen_matcha_tasks_pick_chat_title" = "Choose a chat";
+"screen_matcha_tasks_section_no_deadline" = "No deadline";
+"screen_matcha_tasks_section_today" = "Today";
+"screen_matcha_tasks_section_tomorrow" = "Tomorrow";
+"screen_matcha_tasks_section_upcoming" = "Upcoming";
+"screen_matcha_tasks_tab_empty_body" = "Tasks from your threads and direct messages show up here.";
+"screen_matcha_tasks_tab_empty_title" = "No tasks yet";
+"screen_matcha_tasks_tab_unreadable" = "Some tasks can't be decrypted on this device yet.";
+"screen_matcha_tasks_table_chat" = "Chat";
+"screen_matcha_tasks_table_due" = "Due";
+"screen_matcha_tasks_table_people" = "People";
+"screen_matcha_tasks_table_task" = "Task";
+/* Localazy: change %1$@ -> %1$s */
+"screen_matcha_tasks_with_people" = "With %1$@";
+"action_matcha_remind_me" = "Remind me";
+"screen_matcha_reminder_at_deadline" = "At the deadline";
+"screen_matcha_reminder_bot_dm_unavailable" = "Reminders aren’t available in this chat. Adding the reminder bot would turn it into a group.";
+"screen_matcha_reminder_bot_invite_action" = "Add bot";
+/* Localazy: change %1$@ -> %1$s */
+"screen_matcha_reminder_bot_invite_body" = "%1$@ sends reminders. It joins this chat and can read messages sent after it joins.";
+"screen_matcha_reminder_bot_invite_error" = "Couldn’t add the reminder bot. Check your connection and try again.";
+"screen_matcha_reminder_bot_invite_title" = "Add the reminder bot?";
+"screen_matcha_reminder_bot_no_permission" = "Ask an admin to add the reminder bot to this chat.";
+"screen_matcha_reminder_bot_waiting" = "Waiting for the reminder bot to join…";
+"screen_matcha_reminder_cannot_send" = "You can’t send messages in this chat, so reminders can’t be posted here.";
+/* Localazy: change %1$@ -> %1$s */
+"screen_matcha_reminder_confirm" = "Set reminder · %1$@";
+"screen_matcha_reminder_custom" = "Pick date and time";
+"screen_matcha_reminder_error_dst" = "That time doesn’t exist in your time zone";
+"screen_matcha_reminder_error_empty" = "Add a message";
+"screen_matcha_reminder_error_past" = "Pick a time in the future";
+"screen_matcha_reminder_error_send" = "Couldn’t request the reminder. Check your connection and try again.";
+"screen_matcha_reminder_error_too_far" = "Pick a time within the next year";
+/* Localazy: change %1$@ -> %1$s */
+"screen_matcha_reminder_error_too_long" = "Use up to %1$@ characters";
+"screen_matcha_reminder_helper" = "The reminder bot posts it in this chat, so everyone here can see it.";
+"screen_matcha_reminder_link_message" = "A link to the message is added.";
+"screen_matcha_reminder_link_thread" = "A link to the thread is added.";
+"screen_matcha_reminder_message_hint" = "What to remind you about";
+"screen_matcha_reminder_requested" = "Reminder requested";
+"screen_matcha_reminder_set" = "Set reminder";
+/* Localazy: change %1$@ -> %1$s, %2$@ -> %2$s */
+"screen_matcha_reminder_timezone" = "Time zone: %1$@ (%2$@)";
+"screen_matcha_reminder_title" = "Remind me";
+"a11y_matcha_doc_edit" = "Edit note";
+"a11y_matcha_docs_more" = "More options";
+"a11y_matcha_checklist_checked" = "Checked";
+"a11y_matcha_checklist_unchecked" = "Unchecked";
+"a11y_matcha_format_checklist" = "Checklist";
+"a11y_matcha_format_heading" = "Heading";
+"action_matcha_rename" = "Rename";
+"common_matcha_choose_space" = "Choose a space";
+"common_matcha_docs" = "Notes";
+"common_matcha_space_docs" = "Space notes";
+"common_matcha_docs_row_subtitle" = "Plans and guides for this space, written together";
+"screen_matcha_docs_decrypt_error" = "Some edits can't be decrypted on this device yet. Editing is off until they can be.";
+"screen_matcha_docs_doc_empty" = "This note is empty. Tap the pencil to start writing.";
+"screen_matcha_docs_doc_empty_read_only" = "This note is empty.";
+/* Localazy: change %1$@ -> %1$s */
+"screen_matcha_docs_edited" = "Edited %1$@";
+"screen_matcha_docs_encrypt_dialog_action" = "Turn on";
+"screen_matcha_docs_encrypt_dialog_body" = "Encryption for this space can't be turned off later.";
+"screen_matcha_docs_encrypt_dialog_title" = "Turn on encryption?";
+"screen_matcha_docs_incomplete" = "Some edits haven't arrived yet. Editing is off until they do.";
+"screen_matcha_docs_invalid_update" = "Some edits couldn't be read. Editing is off for this note.";
+"screen_matcha_docs_list_decrypt_error" = "Some note names can't be read on this device yet.";
+"screen_matcha_docs_list_empty" = "Write notes, plans and guides together.";
+"screen_matcha_docs_list_load_error" = "Couldn't load the notes";
+"screen_matcha_docs_load_error_body" = "Check your connection and try again.";
+"screen_matcha_docs_load_error_title" = "Couldn't load this note";
+"screen_matcha_docs_main_name" = "Space notes";
+"screen_matcha_docs_name_hint" = "Note name";
+"screen_matcha_docs_new" = "New note";
+"screen_matcha_docs_not_enabled" = "Notes aren't on for this space yet. Ask an admin to turn them on.";
+"screen_matcha_docs_offline_strip" = "You're offline. Keep this screen open and your edits will send when you reconnect.";
+"screen_matcha_docs_permission_error" = "You can't edit this note anymore, so your latest changes can't be saved.";
+"screen_matcha_docs_rename_title" = "Rename note";
+"screen_matcha_docs_setup_action" = "Turn on notes";
+"screen_matcha_docs_setup_encrypted_body" = "Turning on notes also turns on encryption for this space. You can't turn it off later.";
+"screen_matcha_docs_setup_encrypted_title" = "End-to-end encrypted";
+"screen_matcha_docs_setup_error" = "Couldn't turn on notes. Try again.";
+"screen_matcha_docs_setup_progress" = "Turning on notes…";
+"screen_matcha_docs_setup_rooms_body" = "Room settings and encryption don't change.";
+"screen_matcha_docs_setup_rooms_title" = "Rooms stay the same";
+"screen_matcha_docs_setup_title" = "Notes for this space";
+"screen_matcha_docs_setup_together_body" = "Everyone in the space can read and edit notes.";
+"screen_matcha_docs_setup_together_title" = "Write together";
+"screen_matcha_docs_share_text" = "Share as text";
+"screen_matcha_docs_status_earlier" = "View only · from this chat";
+"screen_matcha_docs_status_failed" = "Couldn't save · tap to retry";
+"screen_matcha_docs_status_offline" = "Offline · not saved yet";
+"screen_matcha_docs_status_saved" = "Saved";
+"screen_matcha_docs_status_view_only" = "View only";
+"screen_matcha_docs_stay" = "Stay";
+"screen_matcha_docs_tip" = "Write notes and plans together in this space.";
+"screen_matcha_docs_tip_action" = "Set up notes";
+"screen_matcha_docs_too_large" = "This change is too big to save. Share the text to keep it.";
+"screen_matcha_docs_unsaved_body" = "Some edits haven't reached the server. If you leave now, they'll be lost.";
+"screen_matcha_docs_unsaved_title" = "Changes not saved";
+"screen_matcha_notes_tab_empty_body" = "Notes live in spaces. Join or create a space to write notes together.";
+"screen_matcha_notes_tab_empty_title" = "No notes yet";
+"screen_matcha_notes_tab_none_on_body" = "None of your spaces has notes turned on yet. Ask a space admin to turn them on.";
+/* matcha: the home tabs (I10). In the Matcha web client a group chat is called a channel. */
+/* A space's All notes, All boards or All chats row for VoiceOver: the row, then the space's name. Localazy: change %1$@ -> %1$s, %2$@ -> %2$s */
+"a11y_matcha_space_shortcut" = "%1$@, %2$@";
+"screen_home_channels_all_boards" = "All boards";
+"screen_home_channels_all_chats" = "All chats";
+"screen_home_channels_all_notes" = "All notes";
+"screen_home_channels_empty_title" = "Create a space to group your channels";
+/* The section of the Channels tab with the group chats that are in none of the user's spaces. */
+"screen_home_channels_other_section" = "Other channels";
+"screen_home_tab_channels" = "Channels";
+/* matcha: the Labs row of the Matcha workspaces flag, Android's MatchaWorkspaces feature flag. */
+"screen_labs_enable_matcha_workspaces" = "POND workspaces";
+"screen_labs_enable_matcha_workspaces_description" = "Named threads in a chip bar, task boards, the Tasks, Notes and Channels tabs, reminders and space notes, shared with the POND web client. Applies the next time POND starts.";
+/* matcha: custom emoji (MSC2545), as the web client's matcha_emoji strings. The personal pack's name. */
+"screen_matcha_emoji_personal_pack_name" = "Your emoji";
+/* What VoiceOver reads for a custom emoji reaction whose name isn't in the room's packs (web: custom_reaction_fallback_label). */
+"a11y_matcha_custom_reaction" = "Custom reaction";
+/* matcha: the Emoji screens of the user settings, room details and space settings, as the web client's matcha_emoji strings. */
+"screen_matcha_emoji_title" = "Emoji and stickers";
+"screen_matcha_emoji_user_description" = "Your emoji and stickers work in every room and are only managed by you. Their images aren't end-to-end encrypted, even in encrypted rooms.";
+"screen_matcha_emoji_room_description" = "Upload custom emoji and stickers for everyone in this room. Their images aren't end-to-end encrypted, even in encrypted rooms.";
+"screen_matcha_emoji_space_description" = "Upload custom emoji and stickers for everyone in this space. They work in every room of the space. Their images aren't end-to-end encrypted, even in encrypted rooms.";
+"screen_matcha_emoji_upload" = "Upload emoji";
+"screen_matcha_emoji_upload_hint" = "PNG, GIF, WebP or JPEG, up to 512 KB. Use emoji in messages by typing :name:, and send stickers from the sticker button beside the message field.";
+"screen_matcha_emoji_busy" = "Saving emoji…";
+"screen_matcha_emoji_empty" = "No custom emoji yet.";
+"screen_matcha_emoji_read_only" = "You don't have permission to change this pack.";
+/* The rename alert's title. %1$@ is the emoji's :code:. Localazy: change %1$@ -> %1$s */
+"screen_matcha_emoji_name_label" = "Name for %1$@";
+/* %1$@ is the emoji's :code:. Localazy: change %1$@ -> %1$s */
+"screen_matcha_emoji_remove" = "Remove %1$@";
+/* %1$@ is a file name. Localazy: change %1$@ -> %1$s */
+"screen_matcha_emoji_error_type" = "%1$@ isn't a PNG, GIF, WebP or JPEG image.";
+/* %1$@ is a file name. Localazy: change %1$@ -> %1$s */
+"screen_matcha_emoji_error_size" = "%1$@ is larger than 512 KB.";
+/* %1$@ is a file name. Localazy: change %1$@ -> %1$s */
+"screen_matcha_emoji_error_dimensions" = "%1$@ is larger than 1024 × 1024 pixels.";
+/* %1$@ is a file name. Localazy: change %1$@ -> %1$s */
+"screen_matcha_emoji_error_upload" = "%1$@ could not be uploaded. Check your connection and try again.";
+"screen_matcha_emoji_error_pack_full" = "This pack is full. Remove some emoji before adding more.";
+"screen_matcha_emoji_error_save" = "The emoji could not be saved. Check your connection and permissions, then try again.";
+"screen_matcha_emoji_error_shortcode_invalid" = "Emoji names must be 2 to 32 letters, numbers, hyphens or underscores.";
+/* %1$@ is the new name, without colons. Localazy: change %1$@ -> %1$s */
+"screen_matcha_emoji_error_shortcode_taken" = "An emoji named :%1$@: already exists in this pack.";
+/* matcha: stickers (MSC2545), as the web client's matcha_stickers strings. The personal pack's tab in the sticker picker. */
+"screen_matcha_stickers_personal_pack_name" = "Your stickers";
+/* The composer's sticker button, its attach menu item and the sticker picker's title. */
+"screen_matcha_stickers_title" = "Stickers";
+"screen_matcha_stickers_upload" = "Upload stickers";
+"screen_matcha_stickers_empty" = "No stickers yet.";
+"screen_matcha_stickers_empty_hint" = "Add your own from Settings → Emoji and stickers, or a pack for everyone from a room's or space's settings.";
+"screen_matcha_stickers_error_send" = "The sticker could not be sent. Check your connection and try again.";
+
+/* matcha: the signed-out start screen, in place of Element's "Be in your element" and its welcome line. */
+"screen_matcha_onboarding_welcome_title" = "Welcome to POND";
+"screen_matcha_onboarding_welcome_message" = "A fork of Element X for personal use.";

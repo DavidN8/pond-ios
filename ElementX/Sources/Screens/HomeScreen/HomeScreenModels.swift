@@ -51,6 +51,7 @@ enum HomeScreenViewAction {
     case markRoomAsUnread(roomIdentifier: String)
     case markRoomAsRead(roomIdentifier: String)
     case markRoomAsFavourite(roomIdentifier: String, isFavourite: Bool)
+    case setRoomMuted(roomIdentifier: String, isMuted: Bool) // matcha: the chat row's swipe
     
     case acceptInvite(roomIdentifier: String)
     case declineInvite(roomIdentifier: String)

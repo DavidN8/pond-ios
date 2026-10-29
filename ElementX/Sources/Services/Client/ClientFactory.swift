@@ -119,7 +119,8 @@ nonisolated struct ClientFactory: ClientFactoryProtocol {
             .crossProcessLockConfig(crossProcessLockConfig: .multiProcess(holderName: InfoPlistReader.main.bundleIdentifier))
             .setSessionDelegate(sessionDelegate: sessionDelegate)
             .userAgent(userAgent: UserAgentBuilder.makeASCIIUserAgent())
-            .threadsEnabled(enabled: threadsEnabled, threadSubscriptions: threadsEnabled)
+            // matcha: the homeserver doesn't support thread subscriptions (MSC4306), as on Android.
+            .threadsEnabled(enabled: threadsEnabled, threadSubscriptions: false)
             .requestConfig(config: .init(retryLimit: 3, // Must be non-zero for the SDK to retry API calls when rate-limited.
                                          timeout: requestTimeout,
                                          maxConcurrentRequests: nil,

@@ -1,0 +1,54 @@
+{
+    "op": "thread_metadata.bootstrap_reply_content",
+    "description": "The content of the hidden first reply that makes a new named root a thread: a thread reply, never a patch.",
+    "cases": [
+        {
+            "name": "a named thread's first reply",
+            "input": {
+                "rootId": "$root:example.org",
+                "name": "Plan"
+            },
+            "expect": {
+                "version": 1,
+                "name": "Plan",
+                "archived": false,
+                "m.relates_to": {
+                    "rel_type": "m.thread",
+                    "event_id": "$root:example.org",
+                    "is_falling_back": true,
+                    "m.in_reply_to": {
+                        "event_id": "$root:example.org"
+                    }
+                }
+            }
+        },
+        {
+            "name": "the name is trimmed",
+            "input": {
+                "rootId": "$root:example.org",
+                "name": "  Plan  "
+            },
+            "expect": {
+                "version": 1,
+                "name": "Plan",
+                "archived": false,
+                "m.relates_to": {
+                    "rel_type": "m.thread",
+                    "event_id": "$root:example.org",
+                    "is_falling_back": true,
+                    "m.in_reply_to": {
+                        "event_id": "$root:example.org"
+                    }
+                }
+            }
+        },
+        {
+            "name": "an empty name is refused",
+            "input": {
+                "rootId": "$root:example.org",
+                "name": ""
+            },
+            "error": "invalid_argument"
+        }
+    ]
+}

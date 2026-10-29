@@ -73,6 +73,9 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         Task {
             state.reportRoomEnabled = await userSession.clientProxy.isReportRoomSupported
         }
+        Task { // matcha
+            state.isEmojiPackVisible = await EmojiPackTarget.showsRoomRow(roomProxy: roomProxy, userSession: userSession)
+        }
         
         userSession.clientProxy.homeserverReachabilityPublisher
             .filter { $0 == .reachable }
@@ -162,6 +165,8 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             actionsSubject.send(.requestRecipientDetailsPresentation(userID: userID))
         case .processTapReport:
             actionsSubject.send(.displayReportRoom)
+        case .processTapEmojiPack: // matcha
+            actionsSubject.send(.displayEmojiPack)
         }
     }
     

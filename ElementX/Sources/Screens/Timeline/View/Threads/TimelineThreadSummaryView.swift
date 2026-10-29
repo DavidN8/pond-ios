@@ -11,13 +11,19 @@ import SwiftUI
 
 struct TimelineThreadSummaryView: View {
     let threadSummary: TimelineItemThreadSummary
+    /// matcha: the thread's shared name and hidden replies.
+    var matchaThread: MatchaThreadInfo?
     var onTap: (() -> Void)?
     
     var body: some View {
         Button {
             onTap?()
         } label: {
-            content
+            if let matchaThread { // matcha: every thread the store knows shows its name, as Android's thread footer does
+                MatchaThreadSummaryView(threadSummary: threadSummary, thread: matchaThread)
+            } else {
+                content
+            }
         }
     }
     
@@ -158,7 +164,7 @@ struct TimelineThreadSummaryView: View {
                 
                 Text(context.viewState.buildMessagePreview(formattedBody: formattedBody, plainBody: plainBody))
                     .font(.compound.bodyXS)
-                    .foregroundColor(.compound.textSecondary)
+                    .foregroundColor(MatchaColors.bubbleSecondaryText) // matcha
             }
             .accessibilityElement(children: .combine)
             .lineLimit(1)

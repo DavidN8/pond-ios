@@ -62,7 +62,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     /// Additional padding applied to outgoing bubbles when the avatar is shown
     private var bubbleAvatarPadding: CGFloat {
         guard !timelineItem.isOutgoing, !isDM else { return 0 }
-        return 8
+        return UserAvatarSizeOnScreen.timeline.value + 4 // matcha: the avatar beside the bubble and a 4 pt gap to the tail's tip
     }
     
     var body: some View {
@@ -105,7 +105,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     
     private var bubble: some View {
         ZStack(alignment: .trailingFirstTextBaseline) {
-            VStack(alignment: alignment, spacing: -8) {
+            VStack(alignment: alignment, spacing: 2) { // matcha: the name above the bubble, which the avatar no longer overlaps
                 if !timelineItem.isOutgoing, !isDM {
                     header
                         .zIndex(1)
@@ -121,19 +121,24 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                     }
                     .padding(timelineItem.isOutgoing ? .leading : .trailing, 48) // Additional padding to differentiate alignment.
                     
-                    HStack(spacing: 0) {
-                        if !timelineItem.isOutgoing {
-                            Spacer()
-                        }
-                        TimelineItemStatusView(timelineItem: timelineItem, adjustedDeliveryStatus: adjustedDeliveryStatus)
-                            .environmentObject(context)
-                            .padding(.top, 8)
-                            .padding(.bottom, 3)
-                    }
+                    // matcha: no status row under the bubble. The ticks inside it show the send and read state, "Seen by" the readers.
                 }
                 .padding(.horizontal, bubbleHorizontalPadding)
                 .padding(.leading, bubbleAvatarPadding)
+                .overlay(alignment: .topLeading) { senderAvatar } // matcha
             }
+        }
+    }
+    
+    /// matcha: beside the first bubble of a run and level with its top, as Android's. Over the bubble, as upstream's, it hid the tail.
+    @ViewBuilder
+    private var senderAvatar: some View {
+        if !timelineItem.isOutgoing, !isDM, shouldShowSenderDetails {
+            TimelineSenderAvatarView(timelineItem: timelineItem)
+                .accessibilityHidden(true) // Read with the sender inside the `TimelineAccessibilityModifier`.
+                .onTapGesture {
+                    context.send(viewAction: .tappedOnSenderDetails(sender: timelineItem.sender))
+                }
         }
     }
     
@@ -141,12 +146,10 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     private var header: some View {
         if shouldShowSenderDetails {
             HStack(alignment: .top, spacing: 4) {
-                TimelineSenderAvatarView(timelineItem: timelineItem)
-                
-                HStack(alignment: .center, spacing: 4) {
+                HStack(alignment: .center, spacing: 4) { // matcha: the avatar moved beside the bubble (`senderAvatar`)
                     Text(timelineItem.sender.displayName ?? timelineItem.sender.id)
                         .font(.compound.bodyMDSemibold)
-                        .foregroundStyle(.compound.decorativeColor(for: timelineItem.sender.id).text)
+                        .foregroundStyle(MatchaColors.decorativeColor(for: timelineItem.sender.id).text) // matcha
                     
                     if let statusEmoji = timelineItem.sender.status.displayed?.emoji {
                         Text(String(statusEmoji))
@@ -168,6 +171,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
             .onTapGesture {
                 context.send(viewAction: .tappedOnSenderDetails(sender: timelineItem.sender))
             }
+            .padding(.leading, bubbleHorizontalPadding + bubbleAvatarPadding) // matcha: level with the bubble
             .padding(.top, 8)
         }
     }
@@ -199,7 +203,8 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
             if context.viewState.areThreadsEnabled,
                !context.viewState.timelineKind.isThread,
                let threadSummary = timelineItem.properties.threadSummary {
-                TimelineThreadSummaryView(threadSummary: threadSummary) {
+                TimelineThreadSummaryView(threadSummary: threadSummary,
+                                          matchaThread: timelineItem.id.eventID.flatMap { context.viewState.matchaThreads[$0] }) { // matcha
                     context.send(viewAction: .displayThread(itemID: timelineItem.id))
                 }
                 .padding(5)
@@ -250,7 +255,8 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                                                       isViewSourceEnabled: context.viewState.isViewSourceEnabled,
                                                       areThreadsEnabled: context.viewState.areThreadsEnabled,
                                                       timelineKind: context.viewState.timelineKind,
-                                                      emojiProvider: context.viewState.emojiProvider)
+                                                      emojiProvider: context.viewState.emojiProvider,
+                                                      canRemind: context.viewState.canRemind) // matcha
         TimelineItemMacContextMenu(item: timelineItem, actionProvider: provider) { action in
             context.send(viewAction: .handleTimelineItemMenuAction(itemID: timelineItem.id, action: action))
         }
@@ -266,6 +272,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                               insets: timelineItem.bubbleInsets(hasContentScanningFailure: hasContentScanningFailure),
                               color: hasContentScanningFailure ? .compound.bgCriticalSubtle : timelineItem.bubbleBackgroundColor,
                               borderColor: hasContentScanningFailure ? .compound.borderCriticalSubtle : nil)
+            .matchaBubbleTail(isOutgoing: timelineItem.isOutgoing, color: hasContentScanningFailure ? nil : timelineItem.bubbleBackgroundColor) // matcha
     }
     
     var contentWithReply: some View {
@@ -321,7 +328,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
 
 private extension EventBasedTimelineItemProtocol {
     var bubbleBackgroundColor: Color? {
-        let defaultColor: Color = isOutgoing ? .compound._bgBubbleOutgoing : .compound._bgBubbleIncoming
+        let defaultColor: Color = isOutgoing ? MatchaColors.bubbleOutgoing : MatchaColors.bubbleIncoming // matcha
         
         switch self {
         case is ImageRoomTimelineItem, is VideoRoomTimelineItem:

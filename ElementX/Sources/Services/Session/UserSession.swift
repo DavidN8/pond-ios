@@ -24,6 +24,7 @@ class UserSession: UserSessionProtocol {
     /// Scans media content, `nil` when no content scanner is configured for the server.
     let contentScannerService: ContentScannerServiceProtocol?
     let notificationService: NotificationServiceProtocol
+    let matchaService: MatchaService // matcha
     
     let callbacks = PassthroughSubject<UserSessionCallback, Never>()
     
@@ -48,6 +49,7 @@ class UserSession: UserSessionProtocol {
         self.liveLocationService = liveLocationService
         self.notificationService = notificationService
         contentScannerService = clientProxy.contentScanner.map(ContentScannerService.init)
+        matchaService = MatchaService(clientProxy: clientProxy) // matcha
         
         authErrorCancellable = clientProxy.actionsPublisher
             .receive(on: DispatchQueue.main)

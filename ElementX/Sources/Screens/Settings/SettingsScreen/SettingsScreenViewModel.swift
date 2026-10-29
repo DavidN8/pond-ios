@@ -38,6 +38,7 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
                                            navigationBarVisibility: isInSecondaryWindow ? .hidden : .automatic,
                                            bindings: .init(userSettings: userSettings)),
                    mediaProvider: userSession.mediaProvider)
+        state.showsEmojiPack = userSettings.app.matchaWorkspacesEnabled // matcha
         
         userSettings.app.developerOptionsEnabledPublisher
             .weakAssign(to: \.state.showDeveloperOptions, on: self)
@@ -118,6 +119,8 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
             actionsSubject.send(.linkNewDevice)
         case .notifications:
             actionsSubject.send(.notifications)
+        case .emojiPack: // matcha
+            actionsSubject.send(.emojiPack)
         case .secureBackup:
             actionsSubject.send(.secureBackup)
         case .moderationAndSafety:

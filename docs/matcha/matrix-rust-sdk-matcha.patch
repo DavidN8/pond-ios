@@ -1,0 +1,101 @@
+From cf6b5573357acc34fc1d17fe151cba4b538b2b48 Mon Sep 17 00:00:00 2001
+From: David N8 <david.work1405@gmail.com>
+Date: Sat, 24 Oct 2026 18:25:57 +0700
+Subject: [PATCH] Add raw JSON reads of relations and state events to the FFI
+ Room
+
+Matcha reads its cards, thread names and document updates as custom
+events, which the timeline drops, and needs one custom state event that
+the sync does not store. This applies element-x-android's
+docs/matcha/rust-sdk/matcha-ffi-relations-json.patch unchanged (offset
+22 lines) on the commit behind matrix-rust-components-swift 26.10.24, so
+the iOS build exposes Room.fetchRelationsJson and
+Room.fetchStateEventContentJson like the Android AAR.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ bindings/matrix-sdk-ffi/src/room/mod.rs | 68 +++++++++++++++++++++++++
+ 1 file changed, 68 insertions(+)
+
+diff --git a/bindings/matrix-sdk-ffi/src/room/mod.rs b/bindings/matrix-sdk-ffi/src/room/mod.rs
+index 5483ae4eb..aa0262256 100644
+--- a/bindings/matrix-sdk-ffi/src/room/mod.rs
++++ b/bindings/matrix-sdk-ffi/src/room/mod.rs
+@@ -1455,6 +1455,74 @@ impl Room {
+                 .collect::<Result<Vec<_>, _>>()?,
+         })
+     }
++
++    /// Matcha fork: fetches one page of the events related to `event_id` by
++    /// `relation_type` from the homeserver, newest first, decrypted when
++    /// possible, as raw event JSON. Unlike the timeline, this includes custom
++    /// event types. An event that cannot be decrypted is returned encrypted.
++    pub async fn fetch_relations_json(
++        &self,
++        event_id: String,
++        relation_type: RelationType,
++        from: Option<String>,
++        limit: u32,
++    ) -> Result<RelationsJsonPage, ClientError> {
++        let event_id = EventId::parse(event_id)?;
++        let options = matrix_sdk::room::RelationsOptions {
++            from,
++            dir: ruma::api::Direction::Backward,
++            limit: Some(limit.into()),
++            include_relations: matrix_sdk::room::IncludeRelations::RelationsOfType(
++                relation_type.into(),
++            ),
++            recurse: false,
++        };
++        let relations = self.inner.relations(event_id, options).await?;
++        Ok(RelationsJsonPage {
++            events: relations
++                .chunk
++                .into_iter()
++                .map(|event| event.into_raw().json().get().to_owned())
++                .collect(),
++            next_batch: relations.next_batch_token,
++        })
++    }
++
++    /// Matcha fork: fetches the content of one state event from the
++    /// homeserver as raw JSON, or `None` when the room has no such state.
++    /// Unlike [`Room::state_events`], this reads custom state types that the
++    /// sync doesn't store.
++    pub async fn fetch_state_event_content_json(
++        &self,
++        event_type: String,
++        state_key: String,
++    ) -> Result<Option<String>, ClientError> {
++        let request = ruma::api::client::state::get_state_event_for_key::v3::Request::new(
++            self.inner.room_id().to_owned(),
++            StateEventType::from(event_type.as_str()),
++            state_key,
++        );
++        match self.inner.client().send(request).await {
++            Ok(response) => Ok(Some(response.event_or_content.get().to_owned())),
++            Err(error)
++                if error.client_api_error_kind()
++                    == Some(&ruma::api::error::ErrorKind::NotFound) =>
++            {
++                Ok(None)
++            }
++            Err(error) => Err(error.into()),
++        }
++    }
++}
++
++/// Matcha fork: one page of related events as raw JSON, see
++/// [`Room::fetch_relations_json`].
++#[derive(uniffi::Record)]
++pub struct RelationsJsonPage {
++    /// The raw JSON of each related event, newest first.
++    pub events: Vec<String>,
++    /// The token for the next (older) page, or `None` at the end.
++    pub next_batch: Option<String>,
+ }
+ 
+ /// The relation types that can be used to filter related events when calling
+-- 
+2.54.0 (Apple Git-157)
+

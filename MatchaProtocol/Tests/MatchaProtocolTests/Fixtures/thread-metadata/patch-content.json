@@ -1,0 +1,82 @@
+{
+    "op": "thread_metadata.patch_content",
+    "description": "The content of a patch changing only the given fields; error invalid_argument when it changes nothing or the name is invalid.",
+    "cases": [
+        {
+            "name": "a rename is trimmed and leaves archived out",
+            "input": {
+                "rootId": "$root:example.org",
+                "name": " Renamed ",
+                "archived": null
+            },
+            "expect": {
+                "version": 1,
+                "name": "Renamed",
+                "m.relates_to": {
+                    "rel_type": "m.reference",
+                    "event_id": "$root:example.org"
+                }
+            }
+        },
+        {
+            "name": "an archive leaves the name out",
+            "input": {
+                "rootId": "$root:example.org",
+                "name": null,
+                "archived": true
+            },
+            "expect": {
+                "version": 1,
+                "archived": true,
+                "m.relates_to": {
+                    "rel_type": "m.reference",
+                    "event_id": "$root:example.org"
+                }
+            }
+        },
+        {
+            "name": "both fields",
+            "input": {
+                "rootId": "$root:example.org",
+                "name": "Both",
+                "archived": false
+            },
+            "expect": {
+                "version": 1,
+                "name": "Both",
+                "archived": false,
+                "m.relates_to": {
+                    "rel_type": "m.reference",
+                    "event_id": "$root:example.org"
+                }
+            }
+        },
+        {
+            "name": "a patch must change something",
+            "input": {
+                "rootId": "$root:example.org",
+                "name": null,
+                "archived": null
+            },
+            "error": "invalid_argument"
+        },
+        {
+            "name": "a blank name is refused",
+            "input": {
+                "rootId": "$root:example.org",
+                "name": "   ",
+                "archived": null
+            },
+            "error": "invalid_argument"
+        },
+        {
+            "name": "a name of 101 characters is refused",
+            "input": {
+                "rootId": "$root:example.org",
+                "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "archived": null
+            },
+            "error": "invalid_argument"
+        }
+    ]
+}

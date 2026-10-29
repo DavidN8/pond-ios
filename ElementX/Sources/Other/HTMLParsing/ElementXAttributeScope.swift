@@ -103,6 +103,7 @@ nonisolated extension AttributeScopes {
         let codeBlock: CodeBlockAttribute
         // periphery:ignore - required to make NSAttributedString to AttributedString conversion even if not used directly
         let inlineCode: InlineCodeAttribute
+        let emoticon: EmoticonAttribute // matcha
         
         // periphery:ignore - required to make NSAttributedString to AttributedString conversion even if not used directly
         

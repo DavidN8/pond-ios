@@ -103,6 +103,8 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                     startLinkNewDeviceFlow()
                 case .notifications:
                     presentNotificationSettings()
+                case .emojiPack: // matcha
+                    EmojiPackScreenCoordinator.push(.user, on: navigationStackCoordinator, flowParameters: flowParameters)
                 case .secureBackup:
                     startEncryptionSettingsFlow()
                 case .moderationAndSafety:

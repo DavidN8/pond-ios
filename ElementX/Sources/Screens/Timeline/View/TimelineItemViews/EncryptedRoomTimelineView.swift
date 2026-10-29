@@ -45,10 +45,10 @@ struct RoomTimelineViewPlaceholderLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack(alignment: .top, spacing: 8) {
             configuration.icon
-                .foregroundColor(.compound.iconSecondary)
+                .foregroundColor(MatchaColors.bubbleSecondaryText) // matcha
             configuration.title
                 .font(.compound.bodyLG.italic())
-                .foregroundColor(.compound.textSecondary)
+                .foregroundColor(MatchaColors.bubbleSecondaryText) // matcha
         }
         .padding(.horizontal, 4)
     }

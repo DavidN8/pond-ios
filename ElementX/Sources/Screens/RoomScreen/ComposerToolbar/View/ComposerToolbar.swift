@@ -14,6 +14,8 @@ import WysiwygComposer
 
 struct ComposerToolbar: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize // matcha
+    @Environment(\.matchaChatBar) private var matchaChatBar // matcha
     
     @ObservedObject var context: ComposerToolbarViewModel.Context
     
@@ -98,6 +100,11 @@ struct ComposerToolbar: View {
             mainTopBarContent
             
             if !context.composerFormattingEnabled {
+                // matcha: stickers beside the message field, as in the web client's composer bar; + offers them at accessibility sizes.
+                if let matchaChatBar, !context.viewState.isVoiceMessageModeActivated, !context.viewState.composerMode.isEdit,
+                   !dynamicTypeSize.isAccessibilitySize {
+                    stickerButton(matchaChatBar)
+                }
                 if context.viewState.isUploading {
                     ProgressView()
                         .scaledFrame(size: Compound.supportsGlass ? 44 : 36, relativeTo: .compound.headingLG)
@@ -106,6 +113,10 @@ struct ComposerToolbar: View {
                     sendButton
                         .scaledPadding(.vertical, trailingButtonVerticalPadding, relativeTo: .compound.headingLG)
                 } else {
+                    // matcha: at accessibility sizes the message field needs the room; + still offers the camera.
+                    if !context.viewState.isVoiceMessageModeActivated, !dynamicTypeSize.isAccessibilitySize {
+                        cameraButton
+                    }
                     voiceMessageRecordingButton(mode: context.viewState.isVoiceMessageModeActivated ? .recording : .idle)
                         .scaledPadding(.vertical, trailingButtonVerticalPadding, relativeTo: .compound.headingLG)
                 }
@@ -161,6 +172,34 @@ struct ComposerToolbar: View {
         .buttonStyle(ComposerToolbarButtonStyle())
         .accessibilityLabel(L10n.richTextEditorCloseFormattingOptions)
         .accessibilityIdentifier(A11yIdentifiers.roomScreen.composerToolbar.closeFormattingOptions)
+    }
+    
+    /// matcha: the camera beside the mic while there's nothing to send, as in iOS chat apps.
+    private var cameraButton: some View {
+        Button {
+            context.send(viewAction: .attach(.camera))
+        } label: {
+            CompoundIcon(\.takePhoto,
+                         size: Compound.supportsGlass ? .medium : .small,
+                         relativeTo: .compound.headingLG)
+        }
+        .buttonStyle(ComposerToolbarButtonStyle())
+        .accessibilityLabel(L10n.screenRoomAttachmentSourceCamera)
+        .scaledPadding(.vertical, buttonVerticalPadding, relativeTo: .compound.headingLG)
+    }
+    
+    /// matcha: the room's sticker packs, in a sheet that sends the tapped sticker.
+    private func stickerButton(_ chatBar: ChatBarViewModel.Context) -> some View {
+        Button {
+            chatBar.send(viewAction: .stickers)
+        } label: {
+            CompoundIcon(\.sticker,
+                         size: Compound.supportsGlass ? .medium : .small,
+                         relativeTo: .compound.headingLG)
+        }
+        .buttonStyle(ComposerToolbarButtonStyle())
+        .accessibilityLabel(UntranslatedL10n.screenMatchaStickersTitle)
+        .scaledPadding(.vertical, buttonVerticalPadding, relativeTo: .compound.headingLG)
     }
     
     private var sendButton: some View {

@@ -35,5 +35,6 @@ struct UserSessionMockConfiguration {
         
         liveLocationService = configuration.liveLocationService
         notificationService = configuration.notificationService
+        matchaService = MatchaService(clientProxy: configuration.clientProxy) // matcha
     }
 }

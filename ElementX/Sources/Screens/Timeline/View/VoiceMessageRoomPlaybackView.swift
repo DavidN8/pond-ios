@@ -36,7 +36,7 @@ struct VoiceMessageRoomPlaybackView: View {
                 Text(timeLabelContent)
                     .lineLimit(1)
                     .font(.compound.bodyXSSemibold)
-                    .foregroundColor(.compound.textSecondary)
+                    .foregroundColor(MatchaColors.bubbleSecondaryText) // matcha
                     .monospacedDigit()
                     .fixedSize(horizontal: true, vertical: true)
             }

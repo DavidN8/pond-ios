@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Drawn for Matcha: a note with a folded corner and two text lines, filled. 24 dp, 2 dp strokes drawn as fills, so it tints like the Compound icons. Ported from element-x-android ic_matcha_notes_solid.xml. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <path d="M5,3H19A2,2 0 0 1 21,5V13.5H14.5A1,1 0 0 0 13.5,14.5V21H5A2,2 0 0 1 3,19V5A2,2 0 0 1 5,3ZM8,8H16A1,1 0 0 1 17,9A1,1 0 0 1 16,10H8A1,1 0 0 1 7,9A1,1 0 0 1 8,8ZM8,12H11A1,1 0 0 1 12,13A1,1 0 0 1 11,14H8A1,1 0 0 1 7,13A1,1 0 0 1 8,12Z" fill-rule="evenodd"/>
+  <path d="M16,15H20.914L15,20.914V16A1,1 0 0 1 16,15Z"/>
+</svg>

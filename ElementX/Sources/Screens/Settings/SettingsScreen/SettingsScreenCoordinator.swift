@@ -27,6 +27,7 @@ enum SettingsScreenCoordinatorAction {
     case manageAccount(url: URL)
     case linkNewDevice
     case notifications
+    case emojiPack // matcha
     case secureBackup
     case moderationAndSafety
     case bugReport
@@ -84,6 +85,8 @@ final class SettingsScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.linkNewDevice)
                 case .notifications:
                     actionsSubject.send(.notifications)
+                case .emojiPack: // matcha
+                    actionsSubject.send(.emojiPack)
                 case .secureBackup:
                     actionsSubject.send(.secureBackup)
                 case .moderationAndSafety:

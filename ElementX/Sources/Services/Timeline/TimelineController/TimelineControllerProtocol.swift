@@ -70,6 +70,9 @@ protocol TimelineControllerProtocol: Sendable {
     
     func sendReadReceipt(for itemID: TimelineItemIdentifier) async
     
+    /// matcha: sends a read receipt for the timeline's latest event, shown or not; in a thread, a receipt of that thread.
+    func markAsRead() async
+    
     func edit(_ eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID,
               message: String,
               html: String?,
@@ -83,6 +86,9 @@ protocol TimelineControllerProtocol: Sendable {
     func removeCaption(_ eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID) async
     
     func toggleReaction(_ reaction: String, to eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID) async
+    
+    /// matcha: toggles a custom emoji reaction (MSC4027), whose key is the image's mxc URL, naming it `shortcode` (`:code:`) when added.
+    func toggleReaction(_ reaction: String, to eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID, shortcode: String?) async
     
     func redact(_ eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID, reason: String?) async
     

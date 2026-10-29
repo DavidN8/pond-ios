@@ -9,6 +9,7 @@
 import Combine
 import Foundation
 import GameKit
+import MatchaProtocol
 import MatrixRustSDK
 import SwiftUI
 import WysiwygComposer
@@ -575,6 +576,8 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
                 let newSelectedRange = NSRange(location: state.bindings.selectedRange.location - suggestion.rawSuggestionText.count, length: 0)
                 state.bindings.selectedRange = newSelectedRange
             }
+        case .customEmoji(let emoji): // matcha
+            insertCustomEmoji(emoji, replacing: suggestion.range)
         }
     }
     
@@ -789,6 +792,25 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
     @objc private func hardwareKeyboardDidConnect(_ notification: Notification) {
         MXLog.info("Did connect hardware keyboard")
         state.bindings.composerFocused = true
+    }
+}
+
+// MARK: - Matcha
+
+private extension ComposerToolbarViewModel {
+    /// Puts `:code: ` in place of the typed `:code`, as the web client does; it becomes the emoji's image when sent.
+    func insertCustomEmoji(_ emoji: CustomEmoji, replacing range: NSRange) {
+        let text = ":\(emoji.shortcode): "
+        if context.composerFormattingEnabled {
+            wysiwygViewModel.replaceCustomEmojiSuggestion(with: text)
+        } else {
+            let attributedString = NSMutableAttributedString(attributedString: state.bindings.plainComposerText)
+            // The suggestion may be older than the text.
+            guard NSMaxRange(range) <= attributedString.length else { return }
+            attributedString.replaceCharacters(in: range, with: text)
+            state.bindings.plainComposerText = attributedString
+            state.bindings.selectedRange = NSRange(location: range.location + text.utf16.count, length: 0)
+        }
     }
 }
 

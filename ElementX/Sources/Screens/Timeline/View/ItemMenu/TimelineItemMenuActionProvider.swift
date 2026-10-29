@@ -19,6 +19,8 @@ struct TimelineItemMenuActionProvider {
     let areThreadsEnabled: Bool
     let timelineKind: TimelineKind
     let emojiProvider: EmojiProviderProtocol
+    /// matcha: whether the room offers "Remind me", `RemindMeScreenViewModel.isOffered(in:)` with Matcha on.
+    var canRemind = false
     
     // swiftlint:disable:next cyclomatic_complexity
     func makeActions() -> TimelineItemMenuActions? {
@@ -87,6 +89,9 @@ struct TimelineItemMenuActionProvider {
             actions.append(pinnedEventIDs.contains(eventID) ? .unpin : .pin)
         }
         
+        // matcha: the reminder links to the message, so it must have reached the server.
+        actions += canRemind && item.isRemoteMessage && canCurrentUserSendMessage ? [.remindMe] : [] // One line: the body is at its limit.
+        
         if item.isCopyable {
             actions.append(.copy)
             
@@ -101,6 +106,10 @@ struct TimelineItemMenuActionProvider {
         
         if item.isEditable, item.hasMediaCaption {
             actions.append(.removeCaption)
+        }
+        
+        if item.isOutgoing, item.isRemoteMessage { // matcha
+            actions.append(.seenBy)
         }
         
         if isViewSourceEnabled {

@@ -42,7 +42,8 @@ struct TimelineView: View {
                                                              isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
                                                              areThreadsEnabled: timelineContext.viewState.areThreadsEnabled,
                                                              timelineKind: timelineContext.viewState.timelineKind,
-                                                             emojiProvider: timelineContext.viewState.emojiProvider)
+                                                             emojiProvider: timelineContext.viewState.emojiProvider,
+                                                             canRemind: timelineContext.viewState.canRemind) // matcha
                     .makeActions()
                 if let actions {
                     TimelineItemMenu(item: info.item, actions: actions)
@@ -55,10 +56,14 @@ struct TimelineView: View {
                                      mediaProvider: timelineContext.mediaProvider,
                                      selectedReactionKey: $0.selectedKey)
                     .edgesIgnoringSafeArea([.bottom])
+                    .environment(\.timelineContext, timelineContext) // matcha: custom emoji keys show their image
             }
             .sheet(item: $timelineContext.readReceiptsSummaryInfo) {
                 ReadReceiptsSummaryView(orderedReadReceipts: $0.orderedReceipts)
                     .environmentObject(timelineContext)
+            }
+            .sheet(item: $timelineContext.remindMeViewModel) { viewModel in // matcha
+                ElementNavigationStack { RemindMeScreen(context: viewModel.context) }
             }
             .translationPresentation(isPresented: $timelineContext.showTranslation, text: timelineContext.textToBeTranslated ?? "")
             .onChange(of: timelineContext.showTranslation) { oldValue, newValue in
@@ -137,8 +142,9 @@ struct TimelineViewRepresentable: UIViewControllerRepresentable {
                 tableViewController.readMarkerUniqueID = context.viewState.timelineState.readMarkerUniqueID
             }
             
-            if tableViewController.typingMembers.members != context.viewState.typingMembers {
-                tableViewController.setTypingMembers(context.viewState.typingMembers)
+            let typingMembers = context.viewState.isTypingRowHidden ? [] : context.viewState.typingMembers // matcha
+            if tableViewController.typingMembers.members != typingMembers {
+                tableViewController.setTypingMembers(typingMembers)
             }
         }
         

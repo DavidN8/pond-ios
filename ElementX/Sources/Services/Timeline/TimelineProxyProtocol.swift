@@ -160,6 +160,9 @@ protocol TimelineProxyProtocol: Sendable {
     
     func toggleReaction(_ reaction: String, to eventID: TimelineItemIdentifier.EventOrTransactionID) async -> Result<Void, TimelineProxyError>
     
+    /// matcha: as `toggleReaction`, adding `extraContentJSON` to the reaction's content when it adds one to a remote event.
+    func toggleReaction(_ reaction: String, to eventID: TimelineItemIdentifier.EventOrTransactionID, extraContentJSON: String?) async -> Result<Void, TimelineProxyError>
+    
     func createPoll(question: String, answers: [String], maxSelections: Int, pollKind: Poll.Kind) async -> Result<Void, TimelineProxyError>
     
     func editPoll(original eventID: String,

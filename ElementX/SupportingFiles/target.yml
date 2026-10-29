@@ -75,10 +75,6 @@ targets:
         appGroupIdentifier: $(APP_GROUP_IDENTIFIER)
         baseBundleIdentifier: $(BASE_BUNDLE_IDENTIFIER)
         keychainAccessGroupIdentifier: $(KEYCHAIN_ACCESS_GROUP_IDENTIFIER)
-        classicAppGroupIdentifier: $(CLASSIC_APP_GROUP_IDENTIFIER)
-        classicAppKeychainServiceIdentifier: $(CLASSIC_APP_KEYCHAIN_SERVICE_IDENTIFIER)
-        classicAppKeychainAccessGroupIdentifier: $(CLASSIC_APP_KEYCHAIN_ACCESS_GROUP_IDENTIFIER)
-        classicAppDeepLinkURL: $(CLASSIC_APP_DEEP_LINK_URL)
         productionAppName: $(PRODUCTION_APP_NAME)
         isNightlyBuild: $(IS_NIGHTLY_BUILD)
         ITSAppUsesNonExemptEncryption: false
@@ -92,11 +88,11 @@ targets:
         NSLocationWhenInUseUsageDescription: Grant location access so that $(APP_DISPLAY_NAME) can share your location.
         NSLocationAlwaysAndWhenInUseUsageDescription: To share your live location, $(APP_DISPLAY_NAME) needs location access when the app is in the background.
         NSFaceIDUsageDescription: Face ID is used to access your app.
+        # matcha: no voip while calls are hidden (App Review guideline 2.5.4); audio keeps voice messages playing when locked.
         UIBackgroundModes: [
           audio,
           fetch,
           processing,
-          voip,
           location
         ]
         BGTaskSchedulerPermittedIdentifiers: [
@@ -118,29 +114,21 @@ targets:
       path: ElementX.entitlements
       properties:
         aps-environment: development
-        com.apple.developer.associated-domains:
-        - applinks:element.io
-        - applinks:app.element.io
-        - applinks:staging.element.io
-        - applinks:develop.element.io
-        - applinks:mobile.element.io
-        - applinks:matrix.to
-        # - applinks:localhost?mode=developer # developer mode only works with https (but self-signed is fine).
-        - webcredentials:*.element.io
+        # matcha: no associated domains in v1 (the homeserver is password-only). Add the homeserver's domain and an
+        # apple-app-site-association file when permalinks or OIDC need them.
         com.apple.developer.usernotifications.communication: true
         com.apple.security.app-sandbox: true
         com.apple.security.application-groups:
         - $(APP_GROUP_IDENTIFIER)
-        - $(CLASSIC_APP_GROUP_IDENTIFIER)
         com.apple.security.network.client: true
         keychain-access-groups:
         - $(KEYCHAIN_ACCESS_GROUP_IDENTIFIER)
-        - $(CLASSIC_APP_KEYCHAIN_ACCESS_GROUP_IDENTIFIER)
 
     settings:
       base:
         PRODUCT_NAME: $(APP_NAME)
         PRODUCT_BUNDLE_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
+        TARGETED_DEVICE_FAMILY: "1" # matcha: iPhone only until the iPad layouts are checked
         MARKETING_VERSION: $(MARKETING_VERSION)
         CURRENT_PROJECT_VERSION: $(CURRENT_PROJECT_VERSION)
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -235,6 +223,7 @@ targets:
     - package: MatrixRustSDK
       embed: true
     - package: Compound
+    - package: MatchaProtocol # matcha
     - package: BuildExtensions
       product: Macros
     - package: Algorithms

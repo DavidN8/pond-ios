@@ -97,7 +97,7 @@ struct ActiveCallTimelineItemView: View {
             Spacer()
             
             VStack(spacing: 4) {
-                if !isJoined {
+                if !isJoined, context?.viewState.isCallJoiningHidden != true { // matcha
                     Button { context?.send(viewAction: .joinActiveCall(isVoiceCall: isVoiceCall)) } label: {
                         Text(L10n.actionJoin)
                             .font(.compound.bodyMDSemibold)

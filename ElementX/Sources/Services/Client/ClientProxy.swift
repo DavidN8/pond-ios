@@ -1082,6 +1082,66 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
+    // MARK: - Room state without a timeline (matcha)
+    
+    func stateEventsJSON(roomID: String, type: String) async -> Result<[String: String], ClientProxyError> {
+        guard let room = storedRoom(roomID) else { return .failure(.roomNotInLocalStore) }
+        return await room.stateEventsJSON(type: type).mapError { .sdkError($0) }
+    }
+    
+    func fetchStateEventContentJSON(roomID: String, type: String, stateKey: String) async -> Result<String?, ClientProxyError> {
+        guard let room = storedRoom(roomID) else { return .failure(.roomNotInLocalStore) }
+        return await room.fetchStateEventContentJSON(type: type, stateKey: stateKey).mapError { .sdkError($0) }
+    }
+    
+    func fetchStateEventsJSON(roomID: String, type: String) async -> Result<[String: String], ClientProxyError> {
+        do {
+            return try await .success(RoomStateRequest.fetchContents(ofType: type, roomID: roomID, session: client.session()))
+        } catch {
+            MXLog.error("Failed fetching the \(type) state of \(roomID) with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func roomInfo(roomID: String) async -> Result<RoomInfoProxyProtocol, ClientProxyError> {
+        guard let room = storedRoom(roomID) else { return .failure(.roomNotInLocalStore) }
+        do {
+            return try await .success(RoomInfoProxy(roomInfo: room.roomInfo()))
+        } catch {
+            MXLog.error("Failed reading the info of \(roomID) with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    private func storedRoom(_ roomID: String) -> Room? {
+        guard let room = try? client.getRoom(roomId: roomID) else {
+            MXLog.error("Room \(roomID) is not in the local store")
+            return nil
+        }
+        return room
+    }
+    
+    // MARK: - Account data (matcha)
+    
+    func accountDataJSON(type: String) async -> Result<String?, ClientProxyError> {
+        do {
+            return try await .success(client.accountData(eventType: type))
+        } catch {
+            MXLog.error("Failed reading the \(type) account data with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func setAccountData(type: String, contentJSON: String) async -> Result<Void, ClientProxyError> {
+        do {
+            try await client.setAccountData(eventType: type, content: contentJSON)
+            return .success(())
+        } catch {
+            MXLog.error("Failed setting the \(type) account data with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
     // MARK: - Private
     
     private func setupSubscriptions(canSubscribeToUserProfile: Bool) async {

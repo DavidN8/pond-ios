@@ -1,0 +1,1172 @@
+{
+    "op": "docs.parse_frame",
+    "description": "Reads one frame of documentId related to the m.room.create event anchor: unrelated (skipped), invalid (the document can no longer be trusted), or the frame with its data in base64.",
+    "cases": [
+        {
+            "name": "an update frame",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e110:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "frame",
+                "senderId": "@bob:example.org",
+                "updateId": "u-1",
+                "kind": "update",
+                "chunks": 1,
+                "chunk": 0,
+                "data": "AQID"
+            }
+        },
+        {
+            "name": "a chunk frame",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e111:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "chunk",
+                        "chunks": 2,
+                        "chunk": 1,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "frame",
+                "senderId": "@bob:example.org",
+                "updateId": "u-1",
+                "kind": "chunk",
+                "chunks": 2,
+                "chunk": 1,
+                "data": "AQID"
+            }
+        },
+        {
+            "name": "a commit frame",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e112:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "commit",
+                        "chunks": 2,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "frame",
+                "senderId": "@bob:example.org",
+                "updateId": "u-1",
+                "kind": "commit",
+                "chunks": 2,
+                "chunk": null,
+                "data": null
+            }
+        },
+        {
+            "name": "another event type is unrelated",
+            "input": {
+                "event": {
+                    "type": "m.room.message",
+                    "event_id": "$e113:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "unrelated"
+            }
+        },
+        {
+            "name": "an undecryptable event is unrelated here",
+            "input": {
+                "event": {
+                    "type": "m.room.encrypted",
+                    "event_id": "$e114:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "algorithm": "m.megolm.v1.aes-sha2",
+                        "ciphertext": "x",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "unrelated"
+            }
+        },
+        {
+            "name": "a frame of another anchor is unrelated",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e115:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$elsewhere"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "unrelated"
+            }
+        },
+        {
+            "name": "a frame with a thread relation is unrelated",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e116:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.thread",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "unrelated"
+            }
+        },
+        {
+            "name": "a frame of another document is unrelated",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e117:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "0f8fad5b-d9cb-469f-a165-70867728950e",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "unrelated"
+            }
+        },
+        {
+            "name": "a frame without a document is unrelated",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e118:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "unrelated"
+            }
+        },
+        {
+            "name": "a redacted frame is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e119:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    },
+                    "unsigned": {
+                        "redacted_because": {
+                            "type": "m.room.redaction"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "a frame without a sender is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e120:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "version 2 is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e121:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 2,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "an update id with a space is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e122:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u 1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "an empty update id is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e123:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "an update id of 128 characters is valid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e124:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "frame",
+                "senderId": "@bob:example.org",
+                "updateId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "kind": "update",
+                "chunks": 1,
+                "chunk": 0,
+                "data": "AQID"
+            }
+        },
+        {
+            "name": "an update id of 129 characters is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e125:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "an update id may use dots, dashes and underscores",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e126:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "a.b-c_D9",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "frame",
+                "senderId": "@bob:example.org",
+                "updateId": "a.b-c_D9",
+                "kind": "update",
+                "chunks": 1,
+                "chunk": 0,
+                "data": "AQID"
+            }
+        },
+        {
+            "name": "zero chunks is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e127:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 0,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "256 chunks is valid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e128:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "chunk",
+                        "chunks": 256,
+                        "chunk": 255,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "frame",
+                "senderId": "@bob:example.org",
+                "updateId": "u-1",
+                "kind": "chunk",
+                "chunks": 256,
+                "chunk": 255,
+                "data": "AQID"
+            }
+        },
+        {
+            "name": "257 chunks is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e129:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "chunk",
+                        "chunks": 257,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "an unknown kind is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e130:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "patch",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "an update frame of two chunks is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e131:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 2,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "a chunk frame of one chunk is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e132:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "chunk",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "an update frame must be chunk 0",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e133:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 1,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "a chunk index must be below the count",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e134:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "chunk",
+                        "chunks": 2,
+                        "chunk": 2,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "a negative chunk index is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e135:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "chunk",
+                        "chunks": 2,
+                        "chunk": -1,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "a string chunk index is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e136:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": "0",
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "a fractional chunk count is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e137:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1.0,
+                        "chunk": 0,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "note": "The web client checks Number.isInteger, which also accepts 1.0.",
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "a commit with data is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e138:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "commit",
+                        "chunks": 2,
+                        "data": "AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "a commit with a chunk index is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e139:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "commit",
+                        "chunks": 2,
+                        "chunk": 0,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "a commit of one chunk is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e140:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "commit",
+                        "chunks": 1,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "a frame without data is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e141:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "empty data is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e142:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "data whose length is not a multiple of 4 is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e143:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQI",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "padded data",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e144:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQ==",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "frame",
+                "senderId": "@bob:example.org",
+                "updateId": "u-1",
+                "kind": "update",
+                "chunks": 1,
+                "chunk": 0,
+                "data": "AQ=="
+            }
+        },
+        {
+            "name": "data with non-zero padding bits",
+            "note": "Some base64 decoders ignore the padding bits; the protocol refuses them.",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e145:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AR==",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "URL-safe base64 is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e146:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "-_8A",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "data with whitespace is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e147:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AQID AQID",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        },
+        {
+            "name": "data that decodes to more than 16384 bytes is invalid",
+            "input": {
+                "event": {
+                    "type": "com.matchahoneylatte.docs.update",
+                    "event_id": "$e148:example.org",
+                    "sender": "@bob:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "doc": "main",
+                        "update_id": "u-1",
+                        "kind": "update",
+                        "chunks": 1,
+                        "chunk": 0,
+                        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$create:example.org"
+                        }
+                    }
+                },
+                "anchor": "$create:example.org",
+                "documentId": "main"
+            },
+            "expect": {
+                "result": "invalid"
+            }
+        }
+    ]
+}

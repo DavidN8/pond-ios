@@ -15,7 +15,11 @@ struct LabsScreen: View {
     var body: some View {
         Form {
             header
-            threadsSection
+            matchaWorkspacesSection // matcha
+            // matcha: named threads need the threads, so they can't be turned off while the workspaces are on.
+            if !context.matchaWorkspacesEnabled {
+                threadsSection
+            }
             gallerySection
             knockingSection
         }
@@ -45,6 +49,25 @@ struct LabsScreen: View {
                 .compoundListSectionHeader()
             }
             .frame(maxWidth: .infinity)
+        }
+    }
+    
+    /// matcha: read when a session starts, as the tabs are built once per session; Android switches them live.
+    private var matchaWorkspacesSection: some View {
+        Section {
+            ListRow(label: .default(title: UntranslatedL10n.screenLabsEnableMatchaWorkspaces,
+                                    icon: \.matchaBoard),
+                    kind: .toggle($context.matchaWorkspacesEnabled))
+        } footer: {
+            Text(UntranslatedL10n.screenLabsEnableMatchaWorkspacesDescription)
+                .compoundListSectionFooter()
+        }
+        .onChange(of: context.matchaWorkspacesEnabled) { _, isEnabled in
+            // Threads turned off while the workspaces were off come back on, as their row did, through a cache clear.
+            if isEnabled, !context.threadsEnabled {
+                context.threadsEnabled = true
+                context.send(viewAction: .clearCache)
+            }
         }
     }
     
@@ -89,10 +112,20 @@ struct LabsScreen: View {
 
 struct LabsScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel = LabsScreenViewModel(labsOptions: AppSettings.volatile())
+    static let withoutMatchaWorkspacesViewModel = { // matcha
+        let appSettings = AppSettings.volatile()
+        appSettings.matchaWorkspacesEnabled = false
+        return LabsScreenViewModel(labsOptions: appSettings)
+    }()
     
     static var previews: some View {
         ElementNavigationStack {
             LabsScreen(context: viewModel.context)
         }
+        
+        ElementNavigationStack { // matcha
+            LabsScreen(context: withoutMatchaWorkspacesViewModel.context)
+        }
+        .previewDisplayName("Without the Matcha workspaces")
     }
 }

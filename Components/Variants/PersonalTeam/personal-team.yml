@@ -1,0 +1,16 @@
+# A free Apple ID ("Personal Team") build: `MATCHA_PERSONAL_TEAM=YES MATCHA_TEAM_ID=<team ID> xcodegen`, see MATCHA_IOS.md.
+# Personal teams can't sign Push Notifications or Communication Notifications, so the app asks for neither
+# (https://developer.apple.com/help/account/reference/supported-capabilities-ios). They can sign App Groups and
+# Keychain Sharing, so the extensions keep their entitlements unchanged.
+# The app's entitlements go to a file of their own so that the committed ElementX.entitlements stays as it is.
+targets:
+  ElementX:
+    entitlements:
+      path: ElementX.entitlements
+      properties:REPLACE:
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups:
+        - $(APP_GROUP_IDENTIFIER)
+        com.apple.security.network.client: true
+        keychain-access-groups:
+        - $(KEYCHAIN_ACCESS_GROUP_IDENTIFIER)

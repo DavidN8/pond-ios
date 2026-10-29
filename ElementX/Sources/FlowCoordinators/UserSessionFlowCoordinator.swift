@@ -21,7 +21,7 @@ enum UserSessionFlowCoordinatorAction {
 }
 
 class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
-    enum HomeTab: Hashable { case chats, spaces, search }
+    enum HomeTab: Hashable { case chats, spaces, search, tasks, notes, channels } // matcha: tasks, notes, channels
     
     private let navigationRootCoordinator: NavigationRootCoordinator
     private let navigationTabCoordinator: NavigationTabCoordinator<HomeTab>
@@ -40,6 +40,8 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
     private let chatsTabDetails: NavigationTabCoordinator<HomeTab>.TabDetails
     private let spacesTabFlowCoordinator: SpacesTabFlowCoordinator
     private let spacesTabDetails: NavigationTabCoordinator<HomeTab>.TabDetails
+    /// matcha: Tasks · Notes · Channels after Chats while the workspaces are on; the Spaces tab is then built but never started.
+    private let matchaHomeTabs: MatchaHomeTabs?
     
     private let searchScreenCoordinator: SearchScreenCoordinator?
     private let searchTabNavigationStackCoordinator: NavigationStackCoordinator?
@@ -135,10 +137,13 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                                                               navigationStackCoordinator: onboardingStackCoordinator,
                                                               flowParameters: flowParameters)
         
+        let matchaHomeTabs = flowParameters.userSession.userSettings.app.matchaWorkspacesEnabled ? MatchaHomeTabs(flowParameters: flowParameters) : nil // matcha
+        self.matchaHomeTabs = matchaHomeTabs
+        navigationTabCoordinator.minimizesTabBarOnScroll = matchaHomeTabs == nil // matcha
         var tabs: [NavigationTabCoordinator<HomeTab>.Tab] = [
-            .init(coordinator: chatsSplitCoordinator, details: chatsTabDetails),
-            .init(coordinator: spacesSplitCoordinator, details: spacesTabDetails)
+            .init(coordinator: chatsSplitCoordinator, details: chatsTabDetails)
         ]
+        tabs += matchaHomeTabs?.tabs ?? [.init(coordinator: spacesSplitCoordinator, details: spacesTabDetails)] // matcha
         
         if let searchTabNavigationStackCoordinator, let searchTabDetails {
             tabs.append(.init(coordinator: searchTabNavigationStackCoordinator, details: searchTabDetails))
@@ -215,6 +220,9 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     func isDisplayingRoomScreen(withRoomID roomID: String) -> Bool {
+        if let matchaHomeTabs, let selectedTab = navigationTabCoordinator.selectedTab, selectedTab != .chats { // matcha
+            return matchaHomeTabs.isDisplayingRoomScreen(withRoomID: roomID, on: selectedTab)
+        }
         guard navigationTabCoordinator.selectedTab == .chats else { return false }
         return chatsTabFlowCoordinator.isDisplayingRoomScreen(withRoomID: roomID)
     }
@@ -226,7 +234,11 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             guard let self else { return }
             
             chatsTabFlowCoordinator.start()
-            spacesTabFlowCoordinator.start()
+            if let matchaHomeTabs { // matcha
+                matchaHomeTabs.start()
+            } else {
+                spacesTabFlowCoordinator.start()
+            }
             attemptStartingOnboarding()
         }
         
@@ -266,6 +278,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             .store(in: &cancellables)
         
         spacesTabFlowCoordinator.actionsPublisher
+            .merge(with: matchaHomeTabs?.actionsPublisher ?? Empty().eraseToAnyPublisher()) // matcha: the same actions
             .sink { [weak self] action in
                 guard let self else { return }
                 switch action {

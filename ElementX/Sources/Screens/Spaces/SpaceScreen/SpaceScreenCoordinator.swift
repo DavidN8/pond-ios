@@ -28,6 +28,7 @@ enum SpaceScreenCoordinatorAction {
     case displayTransferOwnership(roomProxy: JoinedRoomProxyProtocol)
     case addExistingChildren
     case displayCreateChildRoomFlow(space: SpaceServiceRoom)
+    case displayMatchaNotes // matcha
 }
 
 final class SpaceScreenCoordinator: CoordinatorProtocol {
@@ -74,6 +75,8 @@ final class SpaceScreenCoordinator: CoordinatorProtocol {
                 actionsSubject.send(.displayCreateChildRoomFlow(space: space))
             case .presentTransferOwnership(let roomProxy):
                 actionsSubject.send(.displayTransferOwnership(roomProxy: roomProxy))
+            case .displayMatchaNotes:
+                actionsSubject.send(.displayMatchaNotes)
             }
         }
         .store(in: &cancellables)

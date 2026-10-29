@@ -91,7 +91,7 @@ private struct GalleryListRow: View {
                     .font(.compound.bodyLG)
                 Text(fileDescription)
                     .font(.compound.bodySM)
-                    .foregroundStyle(.compound.textSecondary)
+                    .foregroundStyle(MatchaColors.bubbleSecondaryText) // matcha
             }
             .lineLimit(2)
         } icon: {

@@ -30,6 +30,7 @@ enum RoomDetailsScreenViewModelAction: Equatable {
     case displaySecurityAndPrivacy
     case displayReportRoom
     case transferOwnership
+    case displayEmojiPack // matcha
 }
 
 // MARK: View
@@ -71,6 +72,8 @@ struct RoomDetailsScreenViewState: BindableState {
     var knockRequestsCount = 0
     
     var reportRoomEnabled = false
+    /// matcha: the custom emoji row, shown while custom emoji are on to those who may change the pack or when it has emoji.
+    var isEmojiPackVisible = false
     
     var canSeeKnockingRequests: Bool {
         dmRecipientInfo == nil && isKnockableRoom && (canInviteUsers || canKickUsers || canBanUsers)
@@ -234,6 +237,7 @@ enum RoomDetailsScreenViewAction {
     case processTapMediaEvents
     case processTapRequestsToJoin
     case processTapReport
+    case processTapEmojiPack // matcha
 }
 
 enum RoomDetailsScreenViewShortcut {

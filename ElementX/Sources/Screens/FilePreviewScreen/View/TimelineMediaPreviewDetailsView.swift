@@ -59,7 +59,7 @@ struct TimelineMediaPreviewDetailsView: View {
                         if let displayName = item.sender.displayName {
                             Text(displayName)
                                 .font(.compound.bodyLGSemibold)
-                                .foregroundStyle(.compound.decorativeColor(for: item.sender.id).text)
+                                .foregroundStyle(MatchaColors.decorativeColor(for: item.sender.id).text) // matcha
                         }
                         
                         Text(item.sender.id)

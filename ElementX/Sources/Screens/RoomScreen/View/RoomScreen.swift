@@ -15,6 +15,7 @@ struct RoomScreen: View {
     @ObservedObject private var context: RoomScreenViewModelType.Context
     @ObservedObject private var timelineContext: TimelineViewModelType.Context
     let composerToolbar: ComposerToolbar
+    let chatBarContext: ChatBarViewModel.Context? // matcha
     @Environment(\.accessibilityVoiceOverEnabled) private var isVoiceOverEnabled
     
     enum MarkAsReadSource {
@@ -28,10 +29,12 @@ struct RoomScreen: View {
     
     init(context: RoomScreenViewModelType.Context,
          timelineContext: TimelineViewModelType.Context,
-         composerToolbar: ComposerToolbar) {
+         composerToolbar: ComposerToolbar,
+         chatBarContext: ChatBarViewModel.Context? = nil) {
         self.context = context
         self.timelineContext = timelineContext
         self.composerToolbar = composerToolbar
+        self.chatBarContext = chatBarContext
     }
     
     var body: some View {
@@ -71,7 +74,7 @@ struct RoomScreen: View {
                 .padding()
                 .animation(.elementDefault, value: markAsReadSource)
             }
-            .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
+            .background(MatchaColors.chatWallpaper.ignoresSafeArea()) // matcha
             .topBanners([
                 TopBannerLayer(verticalBanners: [
                     TopBannerItem(pinnedItemsBanner, isVisible: context.viewState.shouldShowPinnedEventsBanner && !isVoiceOverEnabled),
@@ -96,6 +99,7 @@ struct RoomScreen: View {
                     }
                 }
             }
+            .matchaChatBar(chatBarContext, isHidden: isMessageSelectionActive) // matcha
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 0) {
                     RoomScreenFooterView(details: context.viewState.footerDetails,
@@ -105,9 +109,10 @@ struct RoomScreen: View {
                     
                     composer
                         .padding(.top, 8)
-                        .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
+                        .background(MatchaColors.chatWallpaper.ignoresSafeArea()) // matcha: the composer floats on the wallpaper
                         .environmentObject(timelineContext)
                         .environment(\.timelineContext, timelineContext)
+                        .environment(\.matchaChatBar, chatBarContext) // matcha
                         // Make sure the reply header honours the hideTimelineMedia setting too.
                         .environment(\.shouldAutomaticallyLoadImages, !timelineContext.viewState.hideTimelineMedia)
                         .collapsedInPlace(isMessageSelectionActive)
@@ -300,7 +305,10 @@ struct RoomScreen: View {
         // .principal + .primaryAction works better than .navigation leading + trailing
         // as the latter disables interaction in the action button for rooms with long names
         ToolbarItem(placement: .principal) {
+            let subtitle = chatBarContext?.viewState.subtitle.room(typingMembers: timelineContext.viewState.typingMembers) // matcha
             RoomHeaderView(roomName: context.viewState.roomTitle,
+                           roomSubtitle: subtitle?.text, // matcha
+                           isRoomSubtitleTyping: subtitle?.isTyping ?? false, // matcha
                            roomAvatar: context.viewState.roomAvatar,
                            dmRecipientDetails: context.viewState.dmRecipientDetails,
                            roomHistorySharingState: context.viewState.roomHistorySharingState,
@@ -314,8 +322,31 @@ struct RoomScreen: View {
             TimelineMessageSelectionToolbar {
                 timelineContext.send(viewAction: .clearMessageSelection)
             }
+        } else if let chatBarContext { // matcha
+            matchaRoomActions(chatBarContext)
         } else {
             roomActions
+        }
+    }
+    
+    /// matcha: the call rules of `roomActions`, with starting a call in ⋯ and an ongoing call's Join button kept in the bar.
+    @ToolbarContentBuilder
+    private func matchaRoomActions(_ chatBarContext: ChatBarViewModel.Context) -> some ToolbarContent {
+        let showsCalls = (!ProcessInfo.processInfo.isiOSAppOnMac || context.viewState.isNativeCallingEnabled) && context.viewState.shouldShowCallButton
+        let isJoinShown = showsCalls && context.viewState.hasOngoingCall
+        if isJoinShown {
+            RoomCallControlsToolbar(viewState: context.viewState) { isVoiceCall in
+                context.send(viewAction: .displayCall(isVoiceCall: isVoiceCall))
+            }
+        }
+        MatchaChatToolbar(context: chatBarContext,
+                          startCall: showsCalls && !context.viewState.hasOngoingCall ? startCall : nil,
+                          isJoinShown: isJoinShown)
+    }
+    
+    private var startCall: MatchaStartCall { // matcha
+        MatchaStartCall(isDM: context.viewState.isDM, canStartCall: context.viewState.canJoinCall) { isVoiceCall in
+            context.send(viewAction: .displayCall(isVoiceCall: isVoiceCall))
         }
     }
     

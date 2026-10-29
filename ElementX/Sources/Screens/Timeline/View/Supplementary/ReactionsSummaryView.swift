@@ -73,6 +73,7 @@ private struct ReactionSummaryButton: View {
     let reaction: AggregatedReaction
     let highlighted: Bool
     let action: (String) -> Void
+    @ScaledMetric(relativeTo: .headline) private var customEmojiSize = 24 // matcha
     
     var body: some View {
         Button { action(reaction.key) } label: { label }
@@ -80,7 +81,7 @@ private struct ReactionSummaryButton: View {
     
     var label: some View {
         HStack(spacing: 4) {
-            Text(reaction.displayKey)
+            ReactionKeyView(reaction: reaction, size: customEmojiSize) // matcha: a custom emoji's image
                 .font(.compound.headingSM)
                 .foregroundColor(textColor)
             if reaction.count > 1 {

@@ -24,6 +24,8 @@ final class TimelineProxy: TimelineProxyProtocol {
     private let forwardPaginationStateSubject = CurrentValueSubject<PaginationState, Never>(.endReached)
     
     private let kind: TimelineKind
+    /// matcha: false for a timeline that shows no senders, such as the Matcha scan, so it doesn't ask for the room's members.
+    private let fetchesMembers: Bool
     
     private var innerTimelineItemProvider: TimelineItemProviderProtocol!
     var timelineItemProvider: TimelineItemProviderProtocol {
@@ -40,9 +42,10 @@ final class TimelineProxy: TimelineProxyProtocol {
     /// on the main actor in FIFO order.
     private let backPaginationStatusContinuation: AsyncStream<PaginationStatus>.Continuation
     
-    init(timeline: Timeline, kind: TimelineKind) {
+    init(timeline: Timeline, kind: TimelineKind, fetchesMembers: Bool = true) { // matcha: fetchesMembers
         self.timeline = timeline
         self.kind = kind
+        self.fetchesMembers = fetchesMembers // matcha
         
         let (backPaginationStatusStream, backPaginationStatusContinuation) = AsyncStream<PaginationStatus>.makeStream()
         self.backPaginationStatusContinuation = backPaginationStatusContinuation
@@ -76,6 +79,7 @@ final class TimelineProxy: TimelineProxyProtocol {
         
         innerTimelineItemProvider = provider
         
+        guard fetchesMembers else { return } // matcha
         Task {
             await timeline.fetchMembers()
         }
@@ -539,6 +543,19 @@ final class TimelineProxy: TimelineProxyProtocol {
             return .success(())
         } catch {
             MXLog.error("Failed toggling reaction for event: \(eventOrTransactionID)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    // matcha: custom emoji reactions (MSC4027) name their image. Neither the key nor the content is logged: they are an emoji's URL.
+    func toggleReaction(_ reaction: String, to eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID, extraContentJSON: String?) async -> Result<Void, TimelineProxyError> {
+        MXLog.info("Toggling a custom emoji reaction for event: \(eventOrTransactionID)")
+        
+        do {
+            _ = try await timeline.toggleReactionWithExtraContent(itemId: eventOrTransactionID.rustValue, key: reaction, extraContentJson: extraContentJSON)
+            return .success(())
+        } catch {
+            MXLog.error("Failed toggling a custom emoji reaction for event: \(eventOrTransactionID)")
             return .failure(.sdkError(error))
         }
     }

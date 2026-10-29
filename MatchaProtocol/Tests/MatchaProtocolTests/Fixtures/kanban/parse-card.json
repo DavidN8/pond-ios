@@ -1,0 +1,1478 @@
+{
+    "op": "kanban.parse_card",
+    "description": "Reads one card revision related to the board root rootId. Invalid revisions are dropped (null); invalid optional fields are dropped on their own.",
+    "cases": [
+        {
+            "name": "a valid card with defaults",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e36:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "every optional field",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e37:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "thread_id": "$t:example.org",
+                        "due_at": 1767225600000,
+                        "reminder_requested": {
+                            "event_id": "$cmd:example.org",
+                            "at": 1767229200000
+                        },
+                        "show_to_room": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": "$t:example.org",
+                "dueAt": 1767225600000,
+                "reminderRequested": {
+                    "eventId": "$cmd:example.org",
+                    "at": 1767229200000
+                },
+                "showToRoom": false
+            }
+        },
+        {
+            "name": "invalid optional fields are dropped",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e38:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "thread_id": "not-an-id",
+                        "due_at": -5,
+                        "reminder_requested": {
+                            "event_id": "x"
+                        },
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a deadline of 0 is dropped",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e39:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "due_at": 0,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "the latest deadline the protocol allows is kept",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e40:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "due_at": 253402300799999,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": 253402300799999,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a deadline after year 9999 is dropped",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e41:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "due_at": 253402300800000,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a fractional deadline is dropped",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e42:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "due_at": 1.7672256000005E12,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a string deadline is dropped",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e43:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "due_at": "1767225600000",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a reminder at 0 is dropped",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e44:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "reminder_requested": {
+                            "event_id": "$cmd",
+                            "at": 0
+                        },
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a reminder whose event id has a space is dropped",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e45:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "reminder_requested": {
+                            "event_id": "$a b",
+                            "at": 1
+                        },
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a thread id must have something after $",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e46:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "thread_id": "$",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a thread id of 512 characters is kept",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e47:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "thread_id": "$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": "$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a thread id of 513 characters is dropped",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e48:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "thread_id": "$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a card id with a space is invalid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e49:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "bad id",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a card id with an underscore is invalid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e50:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c_1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "an empty card id is invalid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e51:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a card id of 80 characters is valid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e52:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a card id of 81 characters is invalid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e53:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a thread card id is valid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e54:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "thread-896f8c657f9fa111b8dbef8fd2b536b3b2dad5977bb9131dd920378e53a7ad7c",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "thread-896f8c657f9fa111b8dbef8fd2b536b3b2dad5977bb9131dd920378e53a7ad7c",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a blank title is invalid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e55:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "  ",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a title is read as written, untrimmed",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e56:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": " Spaced ",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": " Spaced ",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a title of 200 characters is valid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e57:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a title of 201 characters is invalid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e58:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a title of 100 emoji is 200 UTF-16 code units",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e59:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a title of 101 emoji is too long",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e60:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a title of only U+FEFF is not blank",
+            "note": "JavaScript's trim() removes U+FEFF, so the web client drops this revision.",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e61:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "﻿",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "﻿",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a description of 4000 characters is valid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e62:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a description of 4001 characters is invalid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e63:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "the description is required",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e64:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "an unknown column is invalid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e65:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "blocked",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "columns are lowercase",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e66:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "Todo",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "the column is required",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e67:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "archived must be a boolean",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e68:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": "no",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "archived is required",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e69:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "show_to_room true",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e70:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "show_to_room": true,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": null,
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a string show_to_room makes the revision invalid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e71:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "show_to_room": "true",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a numeric show_to_room makes the revision invalid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e72:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "show_to_room": 1,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a null show_to_room makes the revision invalid",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e73:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "show_to_room": null,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "version 2 is not read",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e74:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 2,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a revision of another board is ignored",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e75:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$other-board"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a thread relation is ignored",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e76:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.thread",
+                            "event_id": "$board:example.org",
+                            "is_falling_back": true,
+                            "m.in_reply_to": {
+                                "event_id": "$board:example.org"
+                            }
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a redacted revision is ignored",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e77:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    },
+                    "unsigned": {
+                        "redacted_because": {
+                            "type": "m.room.redaction"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "another event type is ignored",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.board",
+                    "event_id": "$e78:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "ids are checked by code point: a combining mark may follow $",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e86:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "thread_id": "$́t:example.org",
+                        "due_at": 1767225600000,
+                        "reminder_requested": {
+                            "event_id": "$́cmd:example.org",
+                            "at": 1767229200000
+                        },
+                        "show_to_room": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": "$́t:example.org",
+                "dueAt": 1767225600000,
+                "reminderRequested": {
+                    "eventId": "$́cmd:example.org",
+                    "at": 1767229200000
+                },
+                "showToRoom": false
+            }
+        },
+        {
+            "name": "a thread id may hold a no-break space",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e87:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "thread_id": "$t x:example.org",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "note": "JavaScript's \\S excludes U+00A0, so the web client drops this thread id.",
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": "$t x:example.org",
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a thread id of 511 emoji is kept: its length counts code points",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e88:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "Write spec",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "thread_id": "$😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "note": "JavaScript's \\S without the u flag counts UTF-16 code units, so the web client drops this thread id.",
+            "expect": {
+                "cardId": "c-1",
+                "title": "Write spec",
+                "description": "",
+                "status": "doing",
+                "archived": false,
+                "threadId": "$😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+                "dueAt": null,
+                "reminderRequested": null,
+                "showToRoom": true
+            }
+        },
+        {
+            "name": "a title of only U+001C is blank",
+            "input": {
+                "rootId": "$board:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.kanban.card",
+                    "event_id": "$e89:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "card_id": "c-1",
+                        "title": "\u001c",
+                        "description": "",
+                        "column": "doing",
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$board:example.org"
+                        }
+                    }
+                }
+            },
+            "note": "JavaScript's trim() keeps U+001C to U+001F, so the web client reads this revision.",
+            "expect": null
+        }
+    ]
+}

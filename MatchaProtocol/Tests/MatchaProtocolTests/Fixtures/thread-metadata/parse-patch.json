@@ -1,0 +1,495 @@
+{
+    "op": "thread_metadata.parse_patch",
+    "description": "Reads one com.matchahoneylatte.thread.metadata patch for rootId: {name, archived} with absent fields null, or null when the event is not a valid patch of that thread.",
+    "cases": [
+        {
+            "name": "a rename is trimmed",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e1:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "  Ship beta  ",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "name": "Ship beta",
+                "archived": null
+            }
+        },
+        {
+            "name": "an archive carries only archived",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e2:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "archived": true,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "name": null,
+                "archived": true
+            }
+        },
+        {
+            "name": "a restore is an explicit archived false",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e3:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "archived": false,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "name": null,
+                "archived": false
+            }
+        },
+        {
+            "name": "a patch can change both fields",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e4:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "Both",
+                        "archived": true,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "name": "Both",
+                "archived": true
+            }
+        },
+        {
+            "name": "version 2 is not read",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e5:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 2,
+                        "name": "x",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a string version is not read",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e6:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": "1",
+                        "name": "x",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a fractional version is not read",
+            "note": "The web client compares version === 1, which also accepts 1.0.",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e7:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1.0,
+                        "name": "x",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a patch of another thread is ignored",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e8:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "x",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$other:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a thread relation is not a patch",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e9:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "x",
+                        "m.relates_to": {
+                            "rel_type": "m.thread",
+                            "event_id": "$root:example.org",
+                            "is_falling_back": true,
+                            "m.in_reply_to": {
+                                "event_id": "$root:example.org"
+                            }
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "another event type is not a patch",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "m.room.message",
+                    "event_id": "$e10:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "x",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a redacted patch is ignored",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e11:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "x",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    },
+                    "unsigned": {
+                        "redacted_because": {
+                            "type": "m.room.redaction"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a blank name alone is not a patch",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e12:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "   ",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a name of 101 characters is not a patch",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e13:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a name of 100 characters is read",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e14:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "archived": null
+            }
+        },
+        {
+            "name": "the name is measured after trimming",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e15:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": " aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "archived": null
+            }
+        },
+        {
+            "name": "lengths count UTF-16 code units: 50 emoji are 100",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e16:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "name": "🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀",
+                "archived": null
+            }
+        },
+        {
+            "name": "lengths count UTF-16 code units: 51 emoji are too long",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e17:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "an invalid name is dropped but the archive change is kept",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e18:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "",
+                        "archived": true,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": {
+                "name": null,
+                "archived": true
+            }
+        },
+        {
+            "name": "a non-boolean archived alone is not a patch",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e19:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "archived": "yes",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a patch without fields is not a patch",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e20:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a patch without a relation is ignored",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "type": "com.matchahoneylatte.thread.metadata",
+                    "event_id": "$e21:example.org",
+                    "sender": "@alice:example.org",
+                    "origin_server_ts": 1767225600000,
+                    "content": {
+                        "version": 1,
+                        "name": "x"
+                    }
+                }
+            },
+            "expect": null
+        },
+        {
+            "name": "a JSON object without a type is not an event",
+            "input": {
+                "rootId": "$root:example.org",
+                "event": {
+                    "content": {
+                        "version": 1,
+                        "name": "x",
+                        "m.relates_to": {
+                            "rel_type": "m.reference",
+                            "event_id": "$root:example.org"
+                        }
+                    }
+                }
+            },
+            "expect": null
+        }
+    ]
+}

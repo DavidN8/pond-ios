@@ -56,6 +56,8 @@ nonisolated struct RoomSummary {
     let isMarkedUnread: Bool
     let isFavourite: Bool
     let isTombstoned: Bool
+    /// matcha: the SDK's `isDm`, which the Channels tab leaves out like Android's; last, so the memberwise init's callers can omit it.
+    var isDM = false
     
     var hasUnreadMessages: Bool {
         unreadMessagesCount > 0

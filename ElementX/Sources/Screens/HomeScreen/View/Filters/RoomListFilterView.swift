@@ -21,22 +21,23 @@ struct RoomListFilterView: View {
 }
 
 private struct FilterToggleStyle: ToggleStyle {
+    // matcha: WhatsApp's chips, filled and borderless: tonal green when selected, grey otherwise.
     private func strokeColor(isOn: Bool) -> Color {
-        isOn ? .compound.bgActionPrimaryRest : .compound.borderInteractiveSecondary
+        .clear
     }
     
     private func backgroundColor(isOn: Bool) -> Color {
-        isOn ? .compound.bgActionPrimaryRest : .compound.bgCanvasDefault
+        isOn ? .compound.bgAccentSubtle : .compound.bgSubtleSecondary
     }
     
     private func foregroundColor(isOn: Bool) -> Color {
-        isOn ? .compound.textOnSolidPrimary : .compound.textPrimary
+        isOn ? .compound.textBadgeAccent : .compound.textSecondary
     }
     
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: 20)
         configuration.label
-            .font(.compound.bodyMD)
+            .font(configuration.isOn ? .compound.bodyMDSemibold : .compound.bodyMD) // matcha: weight, not only colour, shows the selection
             .foregroundColor(foregroundColor(isOn: configuration.isOn))
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
@@ -51,6 +52,7 @@ private struct FilterToggleStyle: ToggleStyle {
             .onTapGesture {
                 configuration.isOn.toggle()
             }
+            .sensoryFeedback(.selection, trigger: configuration.isOn) // matcha
     }
 }
 

@@ -233,6 +233,8 @@ final class SpaceSettingsFlowCoordinator: FlowCoordinatorProtocol {
                 navigationStackCoordinator.pop()
             case .transferOwnership:
                 stateMachine.tryEvent(.presentTransferOwnership)
+            case .presentEmojiPack: // matcha
+                EmojiPackScreenCoordinator.push(.room(roomProxy), on: navigationStackCoordinator, flowParameters: flowParameters)
             case .presentRecipientDetails, .presentNotificationSettingsScreen, .presentReportRoomScreen,
                  .presentInviteUsersScreen, .presentInviteToNewRoom, .presentPollsHistory, .presentCall,
                  .presentPinnedEventsTimeline, .presentMediaEventsTimeline, .presentKnockingRequestsListScreen:

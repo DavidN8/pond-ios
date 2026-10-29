@@ -210,7 +210,7 @@ final nonisolated class AppSettings: @unchecked Sendable {
     /// Whether or not the Create Account button is shown on the start screen.
     ///
     /// **Note:** Setting this to false doesn't prevent someone from creating an account when the selected homeserver's MAS allows registration.
-    let showCreateAccountButton = true
+    let showCreateAccountButton = false // matcha: POND's server is invite-only
     
     // MARK: - Notifications
     
@@ -413,6 +413,10 @@ final nonisolated class AppSettings: @unchecked Sendable {
     
     @UserPreference(defaultValue: false)
     var multiAccountEnabled: Bool
+    
+    /// matcha: named threads, task boards, the Tasks tab, reminders and Space notes, shared with the Matcha web client.
+    @UserPreference(defaultValue: true)
+    var matchaWorkspacesEnabled: Bool
     
     /// Lets the add account flow start once `multiAccountEnabled` shows its entry points. Not a user preference, so testers
     /// can't add a second account while signing out of one isn't safe yet. Only set it to `true` locally, for development.

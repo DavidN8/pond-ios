@@ -35,6 +35,7 @@ enum RoomDetailsScreenCoordinatorAction {
     case presentSecurityAndPrivacyScreen
     case presentReportRoomScreen
     case transferOwnership
+    case presentEmojiPack // matcha
 }
 
 final class RoomDetailsScreenCoordinator: CoordinatorProtocol {
@@ -98,6 +99,8 @@ final class RoomDetailsScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.presentReportRoomScreen)
                 case .transferOwnership:
                     actionsSubject.send(.transferOwnership)
+                case .displayEmojiPack: // matcha
+                    actionsSubject.send(.presentEmojiPack)
                 }
             }
             .store(in: &cancellables)

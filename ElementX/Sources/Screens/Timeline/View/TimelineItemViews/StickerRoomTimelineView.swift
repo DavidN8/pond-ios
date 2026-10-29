@@ -13,6 +13,8 @@ struct StickerRoomTimelineView: View {
     @Environment(\.timelineContext) private var context
     let timelineItem: StickerRoomTimelineItem
     
+    @ScaledMetric private var stickerSize = 160 // matcha: chat-app sized, not as wide as a photo
+    
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
             ContentScanningView(contentScannerService: context?.contentScannerService,
@@ -20,11 +22,12 @@ struct StickerRoomTimelineView: View {
                 LoadableImage(mediaSource: timelineItem.imageInfo.source,
                               mediaType: .timelineItem(uniqueID: timelineItem.id.uniqueID),
                               blurhash: timelineItem.blurhash,
-                              size: timelineItem.imageInfo.size,
+                              size: nil, // matcha: the original keeps its transparency; the server's thumbnail is a JPEG
                               mediaProvider: context?.mediaProvider) {
                     placeholder
                 }
-                .timelineMediaFrame(imageInfo: timelineItem.imageInfo)
+                .aspectRatio(timelineItem.imageInfo.aspectRatio, contentMode: .fit) // matcha
+                .frame(maxWidth: stickerSize, maxHeight: stickerSize) // matcha
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(L10n.commonSticker), \(timelineItem.body)")
                 .onTapGesture {
@@ -33,7 +36,8 @@ struct StickerRoomTimelineView: View {
             } scanningContent: {
                 placeholder
                     .overlay { ProgressView() }
-                    .timelineMediaFrame(imageInfo: timelineItem.imageInfo)
+                    .aspectRatio(timelineItem.imageInfo.aspectRatio, contentMode: .fit) // matcha
+                    .frame(maxWidth: stickerSize, maxHeight: stickerSize) // matcha
             } unsafeContent: { failure in
                 ContentScanningFailureView(failure: failure)
             }
@@ -42,7 +46,7 @@ struct StickerRoomTimelineView: View {
     
     private var placeholder: some View {
         Rectangle()
-            .foregroundColor(timelineItem.isOutgoing ? .compound._bgBubbleOutgoing : .compound._bgBubbleIncoming)
+            .foregroundColor(timelineItem.isOutgoing ? MatchaColors.bubbleOutgoing : MatchaColors.bubbleIncoming) // matcha
             .opacity(0.3)
     }
 }

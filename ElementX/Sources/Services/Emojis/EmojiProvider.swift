@@ -68,6 +68,8 @@ class EmojiProvider: EmojiProviderProtocol {
         guard !ProcessInfo.processInfo.isiOSAppOnMac else {
             return
         }
+        // matcha: a custom emoji's key is its image's URL, which the quick reactions would show as text.
+        guard !CustomEmojiReactions.isCustomEmoji(key: emoji) else { return }
         
         let frequentlyUsed = if !frequentlyUsedSystemEmojis().contains(emoji) {
             userSettings.app.frequentlyUsedSystemEmojis + [.init(count: 0, key: emoji)]

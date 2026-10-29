@@ -20,10 +20,17 @@ class RoomThreadListScreenViewModel: RoomThreadListScreenViewModelType, RoomThre
         actionsSubject.eraseToAnyPublisher()
     }
     
-    init(threadListServiceProxy: RoomThreadListServiceProxyProtocol, mediaProvider: MediaProviderProtocol) {
+    init(threadListServiceProxy: RoomThreadListServiceProxyProtocol,
+         mediaProvider: MediaProviderProtocol,
+         matchaThreadsPublisher: AnyPublisher<[String: MatchaThreadInfo], Never>? = nil) {
         self.threadListServiceProxy = threadListServiceProxy
         
-        super.init(initialViewState: .init(bindings: .init()), mediaProvider: mediaProvider)
+        super.init(initialViewState: .init(bindings: .init(archiveFilter: matchaThreadsPublisher != nil ? .active : nil)), mediaProvider: mediaProvider)
+        
+        matchaThreadsPublisher? // matcha
+            .removeDuplicates()
+            .sink { [weak self] in self?.state.matchaThreads = $0 }
+            .store(in: &cancellables)
         
         updateItems(self.threadListServiceProxy.itemsPublisher.value)
         

@@ -104,7 +104,7 @@ struct TimelineReactionButtonLabel<Content: View>: View {
         content()
             .background(backgroundShape.inset(by: 1).fill(overlayBackgroundColor))
             .overlay(backgroundShape.inset(by: 2.0).strokeBorder(overlayBorderColor))
-            .overlay(backgroundShape.strokeBorder(Color.compound.bgCanvasDefault, lineWidth: 2))
+            .overlay(backgroundShape.strokeBorder(MatchaColors.chatWallpaper, lineWidth: 2)) // matcha: the cut-out matches the wallpaper
             .accessibilityElement(children: .combine)
     }
     
@@ -138,20 +138,26 @@ struct TimelineCollapseButtonLabel: View {
 }
 
 struct TimelineReactionButton: View {
+    @Environment(\.timelineContext) private var timelineContext // matcha
     let reaction: AggregatedReaction
     let toggleReaction: (String) -> Void
     let showReactionSummary: (String) -> Void
     @ScaledMetric(relativeTo: .subheadline) private var lineHeight = 20
     
+    /// matcha: a custom emoji's `:code:` rather than its URL.
+    private var spokenKey: String {
+        reaction.spokenKey(labels: timelineContext?.viewState.customEmojiReactionLabels)
+    }
+    
     private var accessibilityLabel: String {
         if reaction.isHighlighted {
-            return reaction.count > 1 ? L10n.tr("Localizable", "screen_room_timeline_reaction_including_you_a11y", reaction.count - 1, reaction.displayKey) : L10n.screenRoomTimelineReactionYouA11y(reaction.displayKey)
+            return reaction.count > 1 ? L10n.tr("Localizable", "screen_room_timeline_reaction_including_you_a11y", reaction.count - 1, spokenKey) : L10n.screenRoomTimelineReactionYouA11y(spokenKey)
         }
-        return L10n.tr("Localizable", "screen_room_timeline_reaction_a11y", reaction.count, reaction.displayKey)
+        return L10n.tr("Localizable", "screen_room_timeline_reaction_a11y", reaction.count, spokenKey)
     }
     
     private var toggleReactionAccessibilityActionName: String {
-        reaction.isHighlighted ? L10n.a11yRemoveReaction(reaction.displayKey) : L10n.a11yAddReaction(reaction.displayKey)
+        reaction.isHighlighted ? L10n.a11yRemoveReaction(spokenKey) : L10n.a11yAddReaction(spokenKey)
     }
     
     var body: some View {
@@ -176,7 +182,7 @@ struct TimelineReactionButton: View {
                 // Designs have bodyMD for the key but practically this makes
                 // emojis too big. bodySM gives a more appropriate size when compared
                 // to the count text and the lineHeight/padding in the designs.
-                Text(reaction.displayKey)
+                ReactionKeyView(reaction: reaction, size: lineHeight) // matcha: a custom emoji's image
                     .font(.compound.bodySM)
                 if reaction.count > 1 {
                     Text(String(reaction.count))

@@ -119,6 +119,13 @@ struct SettingsScreen: View {
                     })
                     .accessibilityIdentifier(A11yIdentifiers.settingsScreen.notifications)
             
+            if context.viewState.showsEmojiPack { // matcha
+                ListRow(label: .default(title: UntranslatedL10n.screenMatchaEmojiTitle, icon: \.reaction),
+                        kind: .navigationLink {
+                            context.send(viewAction: .emojiPack)
+                        })
+            }
+            
             switch context.viewState.securitySectionMode {
             case .secureBackup:
                 ListRow(label: .default(title: L10n.commonEncryption,

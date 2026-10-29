@@ -73,6 +73,8 @@ extension RoomFlowCoordinator {
         case reportRoom(previousState: State)
         case declineAndBlockScreen
         case transferOwnershipScreen(previousState: State)
+        /// matcha: the chat's task board, and the archived tasks and editor it shows; like a thread, the only screen above the chat.
+        case tasksBoard
         
         /// A child flow is in progress.
         case presentingChild(childRoomID: String, previousState: State)
@@ -184,6 +186,11 @@ extension RoomFlowCoordinator {
         
         case startMembersFlow(entryPoint: RoomMembersFlowCoordinatorEntryPoint)
         case stopMembersFlow
+        
+        /// matcha: shows the chat's task board, opening the editor of `initialThreadID`'s task when given. Sent from the room only:
+        /// `RoomFlowCoordinator.presentTasksBoard(initialThreadID:)` pops to it first.
+        case presentTasksBoard(initialThreadID: String?)
+        case dismissTasksBoard
     }
     
     // swiftlint:disable:next function_body_length
@@ -244,6 +251,12 @@ extension RoomFlowCoordinator {
                 return .thread(threadRootEventID: threadRootEventID, previousState: fromState)
             case (.thread(_, let previousState), .dismissThread):
                 return previousState
+                
+            // matcha: Tasks board
+            case (.room, .presentTasksBoard):
+                return .tasksBoard
+            case (.tasksBoard, .dismissTasksBoard):
+                return .room
                 
             case (.thread, .presentReportContent(let itemID, let senderID)):
                 return .reportContent(itemID: itemID, senderID: senderID, previousState: fromState)

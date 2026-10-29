@@ -35,6 +35,12 @@ internal enum Asset {
     internal static let locationMarkerShape = ImageAsset(name: "images/location-marker-shape")
     internal static let mapBlurred = ImageAsset(name: "images/mapBlurred")
     internal static let placeholderMap = ImageAsset(name: "images/placeholderMap")
+    internal static let matchaArchive = ImageAsset(name: "images/matcha-archive")
+    internal static let matchaBoardSolid = ImageAsset(name: "images/matcha-board-solid")
+    internal static let matchaBoard = ImageAsset(name: "images/matcha-board")
+    internal static let matchaDoneAll = ImageAsset(name: "images/matcha-done-all")
+    internal static let matchaNotesSolid = ImageAsset(name: "images/matcha-notes-solid")
+    internal static let matchaNotes = ImageAsset(name: "images/matcha-notes")
     internal static let notificationsPromptGraphic = ImageAsset(name: "images/notifications-prompt-graphic")
     internal static let pollWinner = ImageAsset(name: "images/poll-winner")
   }

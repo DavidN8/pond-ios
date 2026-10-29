@@ -80,6 +80,7 @@ extension JoinedRoomProxyMock {
             }
             return .success(member)
         }
+        updatedMemberUserIDClosure = getMemberUserIDClosure // matcha
         
         ignoreDeviceTrustAndResendDevicesSendHandleReturnValue = .success(())
         withdrawVerificationAndResendUserIDsSendHandleReturnValue = .success(())
@@ -135,6 +136,17 @@ extension JoinedRoomProxyMock {
         isVisibleInRoomDirectoryReturnValue = .success(configuration.isVisibleInPublicDirectory)
         
         predecessorRoom = configuration.predecessor
+        
+        // matcha: a room without Matcha data, so the room flow's Matcha store opens on any configured mock.
+        threadListServiceReturnValue = RoomThreadListServiceProxyMock(.init(items: []))
+        sendRawEventTypeContentJSONReturnValue = .failure(.sdkError(RoomProxyMockError.generic))
+        sendRawStateEventTypeStateKeyContentJSONReturnValue = .failure(.sdkError(RoomProxyMockError.generic))
+        stateEventsJSONTypeReturnValue = .success([:])
+        storedStateEventIDTypeStateKeyReturnValue = .success(nil)
+        fetchStateEventContentJSONTypeStateKeyReturnValue = .success(nil)
+        fetchRelatedEventsJSONEventIDRelationFromLimitReturnValue = .success(.init(events: [], nextBatch: nil))
+        rawMessageLikeEventsTypesClosure = { _ in AsyncStream { $0.finish() } }
+        eventTypesTimelineTypesReturnValue = .failure(.sdkError(RoomProxyMockError.generic))
         
         let roomInfoProxyMock = RoomInfoProxyMock(configuration)
         roomInfoProxyMock.powerLevels = powerLevelsProxyMock

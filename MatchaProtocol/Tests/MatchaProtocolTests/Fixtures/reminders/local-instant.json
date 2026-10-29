@@ -1,0 +1,78 @@
+{
+    "op": "reminders.local_instant",
+    "description": "The instant of a wall-clock date (yyyy-MM-dd) and time (HH:mm) in an IANA time zone, or null when a clock change skips it. A repeated time takes the earlier offset.",
+    "cases": [
+        {
+            "name": "a zone without daylight saving",
+            "input": {
+                "date": "2026-01-15",
+                "time": "09:00",
+                "timeZone": "Asia/Jakarta"
+            },
+            "expect": 1768442400000
+        },
+        {
+            "name": "a half-hour offset",
+            "input": {
+                "date": "2026-06-01",
+                "time": "00:00",
+                "timeZone": "Asia/Kolkata"
+            },
+            "expect": 1780252200000
+        },
+        {
+            "name": "skipped in New York",
+            "input": {
+                "date": "2026-03-08",
+                "time": "02:30",
+                "timeZone": "America/New_York"
+            },
+            "expect": null
+        },
+        {
+            "name": "repeated in New York",
+            "input": {
+                "date": "2026-11-01",
+                "time": "01:30",
+                "timeZone": "America/New_York"
+            },
+            "expect": 1793511000000
+        },
+        {
+            "name": "skipped in Berlin",
+            "input": {
+                "date": "2026-03-29",
+                "time": "02:30",
+                "timeZone": "Europe/Berlin"
+            },
+            "expect": null
+        },
+        {
+            "name": "repeated in Berlin",
+            "input": {
+                "date": "2026-10-25",
+                "time": "02:30",
+                "timeZone": "Europe/Berlin"
+            },
+            "expect": 1792888200000
+        },
+        {
+            "name": "skipped on Lord Howe Island",
+            "input": {
+                "date": "2026-10-04",
+                "time": "02:15",
+                "timeZone": "Australia/Lord_Howe"
+            },
+            "expect": null
+        },
+        {
+            "name": "just after the Lord Howe change",
+            "input": {
+                "date": "2026-10-04",
+                "time": "02:30",
+                "timeZone": "Australia/Lord_Howe"
+            },
+            "expect": 1791041400000
+        }
+    ]
+}

@@ -8,6 +8,7 @@
 
 import Algorithms
 import Combine
+import MatchaProtocol
 import MatrixRustSDK
 import OrderedCollections
 import SwiftUI
@@ -46,6 +47,8 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     
     private var paginateBackwardsTask: Task<Void, Never>?
     private var paginateForwardsTask: Task<Void, Never>?
+    
+    private var remindMeCancellable: AnyCancellable? // matcha: the open Remind me sheet's, replaced by the next one
     
     init(roomProxy: JoinedRoomProxyProtocol,
          focussedEventID: String? = nil,
@@ -170,7 +173,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                 fatalError()
             }
             
-            Task { await timelineController.toggleReaction(emoji, to: eventOrTransactionID) }
+            Task { await toggleReaction(emoji, to: eventOrTransactionID) } // matcha: a custom emoji reaction carries its shortcode
         case .sendReadReceiptIfNeeded(let lastVisibleItemID):
             Task { await sendReadReceiptIfNeeded(for: lastVisibleItemID) }
         case .paginateBackwards:
@@ -197,6 +200,10 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             timelineInteractionHandler.displayTimelineItemActionMenu(for: itemID)
         case .handleTimelineItemMenuAction(let itemID, .forward) where state.canSelectMessages:
             startSelection(itemID: itemID)
+        case .handleTimelineItemMenuAction(let itemID, .seenBy): // matcha
+            displaySeenBy(for: itemID)
+        case .handleTimelineItemMenuAction(let itemID, .remindMe): // matcha
+            displayRemindMe(itemID: itemID)
         case .handleTimelineItemMenuAction(let itemID, let action):
             timelineInteractionHandler.handleTimelineItemMenuAction(action, itemID: itemID)
         case .redactConfirmed(let itemID, let reason):
@@ -245,6 +252,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             let serverNames = roomProxy.knownServerNames(maxCount: 50) // Limit to the same number used by ClientProxy.resolveRoomAlias(_:)
             actionsSubject.send(.displayRoom(roomID: predecessorID, via: Array(serverNames)))
         case .joinActiveCall(let isVoiceCall):
+            guard !state.isCallJoiningHidden else { return } // matcha: calls are hidden
             actionsSubject.send(.presentCallScreen(isVoiceCall: isVoiceCall))
         }
     }
@@ -254,7 +262,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         case .sendMessage(let message, let html, let mode, let intentionalMentions):
             Task {
                 await sendCurrentMessage(message,
-                                         html: html,
+                                         html: customEmojiHTML(message, html: html, mode: mode), // matcha
                                          mode: mode,
                                          intentionalMentions: intentionalMentions)
             }
@@ -446,6 +454,11 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                 currentUserProxy = member
             }
         }
+        // matcha: a member joining or leaving changes who must have read a message.
+        state.timelineState.matchaReadUniqueIDs = MatchaReadTicks.readItemIDs(in: timelineController.timelineItems,
+                                                                              members: members,
+                                                                              ownUserID: roomProxy.ownUserID)
+        updateCanRemind() // matcha
     }
     
     private func updateRoomInfo(_ roomInfo: RoomInfoProxyProtocol) {
@@ -461,6 +474,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             state.canCurrentUserKick = powerLevels.canOwnUserKick()
             state.canCurrentUserBan = powerLevels.canOwnUserBan()
         }
+        updateCanRemind() // matcha
     }
     
     private func setupSubscriptions() {
@@ -944,6 +958,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         
         state.timelineState.itemsDictionary = timelineItemsDictionary
         state.timelineState.recomputeReadMarkerUniqueID()
+        updateMatchaItemState(timelineItems) // matcha
     }
     
     private func updateViewState(item: RoomTimelineItemProtocol, groupStyle: TimelineGroupStyle) -> RoomTimelineItemViewState {
@@ -1312,4 +1327,73 @@ extension EnvironmentValues {
 
 private enum SlashCommand: String, CaseIterable {
     case join = "/join "
+}
+
+// MARK: - Matcha
+
+extension TimelineViewModel {
+    /// Everyone who has read the item, including through a receipt on a newer one; nobody while you don't share your own.
+    private func displaySeenBy(for itemID: TimelineItemIdentifier) {
+        // Gone during the menu's dismissal: no sheet, as on Android.
+        guard timelineController.timelineItems.firstUsingStableID(itemID) != nil else { return }
+        let receipts = state.showReadReceipts
+            ? MatchaReadTicks.readReceipts(upTo: itemID, in: timelineController.timelineItems, ownUserID: roomProxy.ownUserID)
+            : []
+        state.bindings.readReceiptsSummaryInfo = .init(orderedReceipts: receipts, id: itemID)
+    }
+    
+    /// The read ticks, and the names of custom emoji reactions (MSC4027), which the SDK doesn't keep, from the room's packs.
+    private func updateMatchaItemState(_ timelineItems: [RoomTimelineItemProtocol]) {
+        state.timelineState.matchaReadUniqueIDs = MatchaReadTicks.readItemIDs(in: timelineItems,
+                                                                              members: roomProxy.membersPublisher.value,
+                                                                              ownUserID: roomProxy.ownUserID)
+        let packs = userSession.matchaService.customEmojiPacks
+        if userSettings.app.matchaWorkspacesEnabled {
+            // Read ahead, as sending only uses the packs last read.
+            _ = packs.cachedPacks(roomID: roomProxy.id)
+        }
+        let keys = CustomEmojiReactions.unlabelledKeys(in: timelineItems, labels: state.customEmojiReactionLabels)
+        guard !keys.isEmpty else { return }
+        Task { [weak self, roomID = roomProxy.id] in
+            let roomPacks = await packs.packs(roomID: roomID)
+            self?.state.customEmojiReactionLabels.merge(CustomEmojiReactions.labels(for: keys, in: roomPacks)) { _, new in new }
+        }
+    }
+    
+    /// Typed `:code:` of the room's custom emoji become inline images, as the web client sends them; anything else is unchanged.
+    /// The packs are those last read, so sending never waits for the server, and an edit keeps the images its message had.
+    private func customEmojiHTML(_ message: String, html: String?, mode: ComposerMode) -> String? {
+        guard userSettings.app.matchaWorkspacesEnabled, ImagePacks.mayContainTypedEmoji(html ?? message) else { return html }
+        var packs = userSession.matchaService.customEmojiPacks.cachedPacks(roomID: roomProxy.id)
+        if case .edit(let originalID, _) = mode,
+           let original = timelineController.timelineItems.first(where: { $0.id.eventOrTransactionID == originalID }) as? EventBasedMessageTimelineItemProtocol,
+           let editedPack = CustomEmojiMessages.editedPack(of: original) {
+            packs.insert(editedPack, at: 0)
+        }
+        return CustomEmojiMessages.formattedBody(markdown: message, html: html, packs: packs) ?? html
+    }
+    
+    private func toggleReaction(_ key: String, to eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID) async {
+        await CustomEmojiReactions.toggle(key, to: eventOrTransactionID, roomID: roomProxy.id, timelineController: timelineController, userSession: userSession)
+    }
+    
+    private func updateCanRemind() {
+        state.canRemind = userSettings.app.matchaWorkspacesEnabled && RemindMeScreenViewModel.isOffered(in: roomProxy)
+    }
+    
+    private func displayRemindMe(itemID: TimelineItemIdentifier) {
+        guard let item = timelineController.timelineItems.firstUsingStableID(itemID) as? EventBasedTimelineItemProtocol,
+              let target = RemindMeTarget(item: item, timelineKind: timelineController.timelineKind) else {
+            return
+        }
+        let viewModel = RemindMeScreenViewModel(target: target, roomProxy: roomProxy, userIndicatorController: userIndicatorController)
+        remindMeCancellable = viewModel.actionsPublisher
+            .sink { [weak self] action in
+                switch action {
+                case .dismiss:
+                    self?.state.bindings.remindMeViewModel = nil
+                }
+            }
+        state.bindings.remindMeViewModel = viewModel
+    }
 }

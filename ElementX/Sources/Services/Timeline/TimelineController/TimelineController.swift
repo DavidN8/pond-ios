@@ -9,6 +9,7 @@
 import Combine
 import Foundation
 import IntentsUI
+import MatchaProtocol
 import MatrixRustSDK
 import UIKit
 
@@ -137,6 +138,10 @@ class TimelineController: TimelineControllerProtocol {
         _ = await activeTimeline.sendReadReceipt(for: eventID, type: receiptType)
     }
     
+    func markAsRead() async { // matcha
+        _ = await activeTimeline.markAsRead(receiptType: userSettings.account.sharePresence ? .read : .readPrivate)
+    }
+    
     func processItemAppearance(_ itemID: TimelineItemIdentifier) async {
         guard let timelineItem = timelineItems.firstUsingStableID(itemID) else {
             return
@@ -159,6 +164,13 @@ class TimelineController: TimelineControllerProtocol {
             MXLog.info("Finished toggling reaction")
         case .failure(let error):
             MXLog.error("Failed toggling reaction with error: \(error)")
+        }
+    }
+    
+    func toggleReaction(_ reaction: String, to eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID, shortcode: String?) async { // matcha
+        let extraContentJSON = shortcode.map { ImagePacks.reactionShortcodeContent($0).jsonString }
+        if case .failure(let error) = await activeTimeline.toggleReaction(reaction, to: eventOrTransactionID, extraContentJSON: extraContentJSON) {
+            MXLog.error("Failed toggling a custom emoji reaction with error: \(error)")
         }
     }
     

@@ -27,12 +27,12 @@ extension View {
 }
 
 private struct TimelineItemBubbleBackgroundModifier: ViewModifier {
-    @Environment(\.timelineGroupStyle) private var timelineGroupStyle
-    
     let isOutgoing: Bool
     let insets: EdgeInsets
     var color: Color?
     var borderColor: Color?
+    /// matcha: every corner rounded, as Android's bubbles; the tail squares the top outer one of a run's first bubble.
+    private let roundedCorners: UIRectCorner = .allCorners
     
     func body(content: Content) -> some View {
         content
@@ -45,26 +45,5 @@ private struct TimelineItemBubbleBackgroundModifier: ViewModifier {
                         .stroke(borderColor)
                 }
             }
-    }
-    
-    private var roundedCorners: UIRectCorner {
-        switch timelineGroupStyle {
-        case .single:
-            return .allCorners
-        case .first:
-            if isOutgoing {
-                return [.topLeft, .topRight, .bottomLeft]
-            } else {
-                return [.topLeft, .topRight, .bottomRight]
-            }
-        case .middle:
-            return isOutgoing ? [.topLeft, .bottomLeft] : [.topRight, .bottomRight]
-        case .last:
-            if isOutgoing {
-                return [.topLeft, .bottomLeft, .bottomRight]
-            } else {
-                return [.topRight, .bottomLeft, .bottomRight]
-            }
-        }
     }
 }

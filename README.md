@@ -1,3 +1,44 @@
+# POND — a vibe-coded fork of Element X iOS
+
+**POND is a vibe-coded fork of [Element X iOS](https://github.com/element-hq/element-x-ios) for personal use.** Its changes
+were written mostly by an AI coding assistant (Anthropic's Claude, through Claude Code), directed and tested by
+[David N8](https://github.com/DavidN8). It is not made, reviewed or endorsed by Element. All the hard work underneath is
+theirs and the Matrix community's.
+
+On the App Store it is **POND Chat** (unlisted). It signs in to Matrix servers that use password sign-in; OIDC servers such
+as matrix.org need Element's sign-in domain, which a fork can't use.
+
+What POND adds to Element X: named threads in a chip bar, task boards and a Tasks tab, notes, reminders, custom emoji and
+stickers (MSC2545 image packs) and a WhatsApp-like look. [MATCHA_IOS.md](MATCHA_IOS.md) lists every change and how to build
+it, and [docs/matcha/](docs/matcha/) has the Rust SDK patch the app is built with. The `matcha` branch is the source of every
+release.
+
+- [Privacy policy](PRIVACY.md)
+- [Acceptable use](TERMS.md)
+- Support: [open an issue](https://github.com/DavidN8/pond-ios/issues) or email david.work1405@gmail.com
+
+## Credits
+
+- **Element X iOS**: © Element Creations Ltd and New Vector Ltd, and every
+  [contributor](https://github.com/element-hq/element-x-ios/graphs/contributors). AGPL-3.0-only.
+- **Matrix Rust SDK** and **matrix-rust-components-swift**: © The Matrix.org Foundation and their
+  [contributors](https://github.com/matrix-org/matrix-rust-sdk/graphs/contributors). Apache-2.0.
+- **Compound**, Element's design system ([compound-ios](https://github.com/element-hq/compound-ios),
+  [compound-design-tokens](https://github.com/element-hq/compound-design-tokens)).
+- **Matrix**, the open protocol, by [the Matrix.org Foundation](https://matrix.org).
+- **MSC2545** image packs, by Sorunome, which POND's custom emoji and stickers follow.
+- The third-party Swift packages listed in [project.yml](project.yml), each under its own licence.
+- Element Web and Element X Android, which POND's web and Android forks build on in the same way.
+
+## Licence
+
+POND is licensed, like Element X, under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only), and comes with
+no warranty. POND's changes are under the same licence. "Element" is Element's trademark; POND uses its own name and icon.
+
+---
+
+*Element X iOS's own README follows.*
+
 [![Element iOS Matrix room #element-x-ios:matrix.org](https://img.shields.io/matrix/element-x-ios:matrix.org.svg?label=%23element-x-ios:matrix.org&logo=matrix&server_fqdn=matrix.org)](https://matrix.to/#/#element-x-ios:matrix.org)
 ![GitHub](https://img.shields.io/github/license/element-hq/element-x-ios)
 

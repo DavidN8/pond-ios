@@ -33,7 +33,8 @@ final class PillAttachmentViewProvider: NSTextAttachmentViewProvider, NSSecureCo
             // Keep a reference to the parent text view for size adjustments and pills flushing.
             provider.delegate = parentView?.superview as? PillAttachmentViewProviderDelegate
         }
-        tracksTextAttachmentViewBounds = true
+        // matcha: a custom emoji's bounds follow its line's font instead.
+        tracksTextAttachmentViewBounds = !(textAttachment is EmoticonTextAttachment)
     }
     
     override nonisolated func loadView() {
@@ -43,6 +44,11 @@ final class PillAttachmentViewProvider: NSTextAttachmentViewProvider, NSSecureCo
         // the assumeIsolated below would trap otherwise.
         nonisolated(unsafe) let provider = self
         MainActor.assumeIsolated {
+            if let emoticon = provider.textAttachment as? EmoticonTextAttachment { // matcha: a custom emoji
+                provider.view = emoticon.makeView(in: provider.delegate)
+                return
+            }
+            
             guard let textAttachment = provider.textAttachment as? PillTextAttachment,
                   let pillData = textAttachment.pillData else {
                 MXLog.failure("Attachment is missing data or not of expected class")

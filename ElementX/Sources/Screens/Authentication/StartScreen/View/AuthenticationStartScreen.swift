@@ -76,12 +76,12 @@ struct AuthenticationStartScreen: View {
             
             if !context.viewState.hideBrandChrome {
                 VStack(spacing: 8) {
-                    Text(L10n.screenOnboardingWelcomeTitle)
+                    Text(UntranslatedL10n.screenMatchaOnboardingWelcomeTitle) // matcha: POND's words, not Element's slogan
                         .font(.compound.headingLGBold)
                         .foregroundColor(.compound.textPrimary)
                         .multilineTextAlignment(.center)
                         .accessibilityAddTraits(.isHeader)
-                    Text(L10n.screenOnboardingWelcomeMessage(InfoPlistReader.main.productionAppName))
+                    Text(UntranslatedL10n.screenMatchaOnboardingWelcomeMessage) // matcha
                         .font(.compound.bodyLG)
                         .foregroundColor(.compound.textPrimary)
                         .multilineTextAlignment(.center)

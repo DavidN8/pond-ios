@@ -1,0 +1,62 @@
+{
+    "op": "reminders.with_link",
+    "description": "Appends the thread link to a reminder message on its own line, unless the message already contains it.",
+    "cases": [
+        {
+            "name": "the link goes on a new line",
+            "input": {
+                "message": "Do it",
+                "link": "https://matrix.to/#/!r:example.org/$t"
+            },
+            "expect": "Do it\nhttps://matrix.to/#/!r:example.org/$t"
+        },
+        {
+            "name": "a message with the link is unchanged",
+            "input": {
+                "message": "Do it\nhttps://matrix.to/#/!r:example.org/$t",
+                "link": "https://matrix.to/#/!r:example.org/$t"
+            },
+            "expect": "Do it\nhttps://matrix.to/#/!r:example.org/$t"
+        },
+        {
+            "name": "an empty message becomes the link",
+            "input": {
+                "message": "",
+                "link": "https://matrix.to/#/!r:example.org/$t"
+            },
+            "expect": "https://matrix.to/#/!r:example.org/$t"
+        },
+        {
+            "name": "a blank message becomes the link",
+            "input": {
+                "message": "   ",
+                "link": "https://matrix.to/#/!r:example.org/$t"
+            },
+            "expect": "https://matrix.to/#/!r:example.org/$t"
+        },
+        {
+            "name": "no link",
+            "input": {
+                "message": "Do it",
+                "link": null
+            },
+            "expect": "Do it"
+        },
+        {
+            "name": "containment is a plain substring test",
+            "input": {
+                "message": "See https://matrix.to/#/!r:example.org/$t2",
+                "link": "https://matrix.to/#/!r:example.org/$t"
+            },
+            "expect": "See https://matrix.to/#/!r:example.org/$t2"
+        },
+        {
+            "name": "containment counts code units, so a link followed by a combining mark is contained",
+            "input": {
+                "message": "See https://matrix.to/#/!r:example.org/$t́",
+                "link": "https://matrix.to/#/!r:example.org/$t"
+            },
+            "expect": "See https://matrix.to/#/!r:example.org/$t́"
+        }
+    ]
+}

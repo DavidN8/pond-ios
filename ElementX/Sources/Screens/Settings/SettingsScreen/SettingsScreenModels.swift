@@ -19,6 +19,7 @@ enum SettingsScreenViewModelAction {
     case manageAccount(url: URL)
     case linkNewDevice
     case notifications
+    case emojiPack // matcha
     case secureBackup
     case moderationAndSafety
     case reportBug
@@ -50,6 +51,8 @@ struct SettingsScreenViewState: BindableState {
     var accountProfileURL: URL?
     var showAccountDeactivation: Bool
     var showDeveloperOptions: Bool
+    /// matcha: the personal custom emoji pack's row, while custom emoji are on.
+    var showsEmojiPack = false
     
     var securitySectionMode = SettingsScreenSecuritySectionMode.none
     var showSecuritySectionBadge = false
@@ -109,6 +112,7 @@ enum SettingsScreenViewAction {
     case manageAccount(url: URL)
     case linkNewDevice
     case notifications
+    case emojiPack // matcha
     case secureBackup
     case moderationAndSafety
     case reportBug

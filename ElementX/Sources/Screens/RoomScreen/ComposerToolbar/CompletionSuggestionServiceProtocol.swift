@@ -8,12 +8,14 @@
 
 import Combine
 import Foundation
+import MatchaProtocol
 import WysiwygComposer
 
 struct SuggestionTrigger: Equatable {
     enum SuggestionType: Equatable {
         case user
         case room
+        case customEmoji // matcha
     }
     
     let type: SuggestionType
@@ -26,6 +28,7 @@ struct SuggestionItem: Identifiable, Equatable {
         case user(User)
         case allUsers(RoomAvatar)
         case room(Room)
+        case customEmoji(CustomEmoji) // matcha
     }
     
     struct User: Equatable {
@@ -54,6 +57,8 @@ struct SuggestionItem: Identifiable, Equatable {
             PillUtilities.atRoom
         case .room(let room):
             room.id
+        case .customEmoji(let emoji): // matcha
+            emoji.url
         }
     }
     
@@ -65,6 +70,8 @@ struct SuggestionItem: Identifiable, Equatable {
             user.displayName ?? user.id
         case .room(let room):
             room.name
+        case .customEmoji(let emoji): // matcha
+            ":\(emoji.shortcode):"
         }
     }
     
@@ -72,7 +79,7 @@ struct SuggestionItem: Identifiable, Equatable {
         switch suggestionType {
         case .user(let user):
             user.status.displayed?.emoji
-        case .allUsers, .room:
+        case .allUsers, .room, .customEmoji: // matcha: customEmoji
             nil
         }
     }
@@ -85,6 +92,8 @@ struct SuggestionItem: Identifiable, Equatable {
             user.displayName == nil ? nil : user.id
         case .room(let room):
             room.canonicalAlias
+        case .customEmoji: // matcha
+            nil
         }
     }
 }
@@ -105,6 +114,8 @@ extension WysiwygComposer.SuggestionPattern {
             return SuggestionTrigger(type: .user, text: text, range: .init(location: Int(start), length: Int(end)))
         case .hash:
             return SuggestionTrigger(type: .room, text: text, range: .init(location: Int(start), length: Int(end)))
+        case .colon: // matcha: the editor offers `:code` with its own range, which the composer reads when inserting
+            return SuggestionTrigger(type: .customEmoji, text: text.hasPrefix(":") ? String(text.dropFirst()) : text, range: .init(location: Int(start), length: Int(end - start)))
         default:
             return nil
         }
