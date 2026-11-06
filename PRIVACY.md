@@ -32,7 +32,12 @@ or pick a file to send, and uses them only for that. It reads only the photos yo
 
 ## Notifications
 
-The app does not send push notifications yet.
+If you allow notifications, the app gives your Matrix server a push token Apple made for your phone. When a message arrives,
+your Matrix server sends POND's push service (it runs on POND's server, whichever Matrix server you use) that token with the
+message's ID, the chat's ID and your unread count, and the push service passes them to Apple, which wakes the app. The app then
+fetches the message from your Matrix server and decrypts it on your phone to show it: message contents never go through the
+push service or Apple. The push service stores nothing; its logs, which can include those IDs and the token, are overwritten
+after a few megabytes. Turn notifications off in the app's settings or your phone's to stop all this.
 
 ## Sharing
 

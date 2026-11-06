@@ -19,7 +19,8 @@ nonisolated extension AppHooks {
     }
 }
 
-/// Configures POND: threads on by default and its legal links. Sign in keeps upstream's servers, so users type their own.
+/// Configures POND: threads on by default, its legal links and its push gateway. Sign in keeps upstream's servers, so users
+/// type their own.
 struct MatchaAppSettingsHook: AppSettingsHookProtocol {
     /// The app group's defaults, which the NSE reads too.
     var sharedStore: @Sendable () -> UserDefaultsProtocol? = { TrackedUserDefaults(suiteName: AppSettings.suiteName) }
@@ -32,13 +33,14 @@ struct MatchaAppSettingsHook: AppSettingsHookProtocol {
             store.set(true, forKey: threadsKey)
         }
         // Registered too, after the check above (a registered default reads as set): a first launch wipes the stored settings
-        // after this hook runs. ponytail: the NSE then reads off until the app's next launch stores it again; harmless until I13.
+        // after this hook runs. ponytail: the NSE then reads off until the app's next launch stores it again.
         UserDefaults(suiteName: AppSettings.suiteName)?.register(defaults: [threadsKey: true])
         // ponytail: password-only homeserver, so the OAuth redirect stays Element's. POND's pages live in its public repository.
         appSettings.override(accountProviders: appSettings.accountProviders,
                              allowOtherAccountProviders: appSettings.allowOtherAccountProviders,
                              hideBrandChrome: appSettings.hideBrandChrome,
-                             pushGatewayBaseURL: appSettings.pushGatewayBaseURL,
+                             // matrix.org's gateway has no APNs key for POND's app ID; POND's Sygnal has, for any homeserver.
+                             pushGatewayBaseURL: "https://matrix.matchahoneylatte.com",
                              oAuthRedirectURL: appSettings.oAuthRedirectURL,
                              oAuthClientURIPath: appSettings.oAuthClientURIPath,
                              websiteURL: "https://github.com/DavidN8/pond-ios",

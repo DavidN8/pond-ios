@@ -19,6 +19,7 @@ struct MatchaAppHooksTests {
         #expect(appSettings.accountProviders == AppSettings.volatile().accountProviders)
         #expect(appSettings.allowOtherAccountProviders)
         #expect([appSettings.websiteURL, appSettings.copyrightURL, appSettings.acceptableUseURL, appSettings.privacyURL].allSatisfy { $0.absoluteString.hasPrefix("https://github.com/DavidN8/pond-ios") })
+        #expect(appSettings.pushGatewayNotifyEndpoint.absoluteString == "https://matrix.matchahoneylatte.com/_matrix/push/v1/notify")
     }
     
     @Test
