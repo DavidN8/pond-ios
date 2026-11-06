@@ -8,8 +8,13 @@ policy covers what it stores.
 
 ## What the app sends, and where
 
-The app only talks to the Matrix server you sign in to and to Apple's services that every iPhone app uses. It contains no
+The app talks to the Matrix server you sign in to and to Apple's services that every iPhone app uses. It contains no
 analytics, advertising or tracking, and it does not send crash reports.
+
+Calls show only where your Matrix server offers them. When you join one, the app also connects to the call service (LiveKit)
+named for that call: usually your Matrix server's, which can run on a different host, or, in a chat with members on other
+servers, one of theirs. It carries your audio and video to the other members, and sees your Matrix ID and IP address while you
+are in the call.
 
 ## What POND's server stores
 
@@ -22,8 +27,8 @@ analytics, advertising or tracking, and it does not send crash reports.
 
 ## Permissions on your phone
 
-The app asks for the camera, microphone and photo library only when you take a photo, record a voice message or pick a file
-to send, and uses them only for that. It reads only the photos you select.
+The app asks for the camera, microphone and photo library only when you take a photo, record a voice message, join a call
+or pick a file to send, and uses them only for that. It reads only the photos you select.
 
 ## Notifications
 

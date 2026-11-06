@@ -88,7 +88,8 @@ targets:
         NSLocationWhenInUseUsageDescription: Grant location access so that $(APP_DISPLAY_NAME) can share your location.
         NSLocationAlwaysAndWhenInUseUsageDescription: To share your live location, $(APP_DISPLAY_NAME) needs location access when the app is in the background.
         NSFaceIDUsageDescription: Face ID is used to access your app.
-        # matcha: no voip while calls are hidden (App Review guideline 2.5.4); audio keeps voice messages playing when locked.
+        # matcha: no voip until push rings calls (I13, App Review guideline 2.5.4); audio keeps calls and voice messages
+        # playing when locked.
         UIBackgroundModes: [
           audio,
           fetch,

@@ -40,6 +40,11 @@ class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, Ro
         super.init(initialViewState: userSession.userHooks.roomMemberDetailsScreenHook.update(initialViewState),
                    mediaProvider: userSession.mediaProvider)
         
+        // matcha: the homeserver's LiveKit check can finish after this screen is built.
+        (userSession.userHooks.roomMemberDetailsScreenHook as? MatchaCallsHook)?.$isSupported
+            .sink { [weak self] in self?.state.isCallingEnabled = $0 }
+            .store(in: &cancellables)
+        
         showMemberLoadingIndicator()
         
         Task {

@@ -39,6 +39,11 @@ class UserProfileScreenViewModel: UserProfileScreenViewModelType, UserProfileScr
         super.init(initialViewState: userSession.userHooks.userProfileScreenHook.update(initialViewState),
                    mediaProvider: userSession.mediaProvider)
         
+        // matcha: the homeserver's LiveKit check can finish after this screen is built.
+        (userSession.userHooks.userProfileScreenHook as? MatchaCallsHook)?.$isSupported
+            .sink { [weak self] in self?.state.isCallingEnabled = $0 }
+            .store(in: &cancellables)
+        
         showLoadingIndicator(allowsInteraction: true)
         Task {
             await loadProfile()

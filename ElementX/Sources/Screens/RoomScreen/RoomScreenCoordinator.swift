@@ -98,8 +98,11 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
             (timelineViewModel as? TimelineViewModel)?.showMatchaThreads(of: chatBar.context.viewState.chat.store)
             (timelineViewModel as? TimelineViewModel)?.state.isTypingRowHidden = true
         }
-        // matcha: the timeline's Join button follows the room's call rule, which hides calls in Matcha.
-        (timelineViewModel as? TimelineViewModel)?.state.isCallJoiningHidden = !roomViewModel.context.viewState.isCallingEnabled
+        // matcha: the timeline's Join button follows the room's call rule, which changes once the LiveKit check finishes.
+        let timeline = timelineViewModel as? TimelineViewModel
+        roomViewModel.context.$viewState.map(\.isCallingEnabled).removeDuplicates()
+            .sink { timeline?.state.isCallJoiningHidden = !$0 }
+            .store(in: &cancellables)
         
         let wysiwygViewModel = WysiwygComposerViewModel(minHeight: ComposerConstant.minHeight,
                                                         maxCompressedHeight: ComposerConstant.maxHeight,

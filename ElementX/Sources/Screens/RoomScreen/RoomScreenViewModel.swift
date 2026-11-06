@@ -75,6 +75,11 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         super.init(initialViewState: userSession.userHooks.roomScreenHook.update(viewState),
                    mediaProvider: userSession.mediaProvider)
         
+        // matcha: the homeserver's LiveKit check can finish after this screen is built.
+        (userSession.userHooks.roomScreenHook as? MatchaCallsHook)?.$isSupported
+            .sink { [weak self] in self?.state.isCallingEnabled = $0 }
+            .store(in: &cancellables)
+        
         updateRoomInfo(roomProxy.infoPublisher.value)
         setupSubscriptions(ongoingCallRoomIDPublisher: ongoingCallRoomIDPublisher)
         

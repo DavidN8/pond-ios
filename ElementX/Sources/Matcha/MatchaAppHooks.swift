@@ -5,10 +5,12 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Combine
 import Foundation
 
-// Matcha configures the app through upstream's fork hooks, so no upstream setting or screen is edited. Tests, previews
-// and snapshots never call `setUp()` and keep upstream's defaults; the extensions don't compile this file.
+// Matcha configures the app through upstream's fork hooks, so no upstream setting is edited and the screens only gain
+// marked lines for calls: a late call check (`MatchaCallsHook`) and no Element Call analytics. Tests, previews and snapshots
+// never call `setUp()` and keep upstream's defaults; the extensions don't compile this file.
 nonisolated extension AppHooks {
     func setUp() {
         registerAppSettingsHook(MatchaAppSettingsHook())
@@ -60,17 +62,12 @@ struct MatchaAppSettingsHook: AppSettingsHookProtocol {
 }
 
 nonisolated struct MatchaUserSessionHook: UserSessionHookProtocol {
-    /// Calls stay hidden until the homeserver advertises a LiveKit focus (`rtc_foci`), platform plan decision 17.
-    static let callsEnabled = false
-    
     @MainActor func makeUserHooks(for clientProxy: ClientProxyProtocol) -> UserHooks {
-        guard !Self.callsEnabled else { return UserHooks() }
-        
-        let hiddenCallsHook = MatchaHiddenCallsHook()
-        return UserHooks(roomScreenHook: hiddenCallsHook,
-                         roomDetailsScreenHook: hiddenCallsHook,
-                         roomMemberDetailsScreenHook: hiddenCallsHook,
-                         userProfileScreenHook: hiddenCallsHook)
+        let callsHook = MatchaCallsHook(clientProxy: clientProxy)
+        return UserHooks(roomScreenHook: callsHook,
+                         roomDetailsScreenHook: callsHook,
+                         roomMemberDetailsScreenHook: callsHook,
+                         userProfileScreenHook: callsHook)
     }
     
     func configure(_ userSettings: UserSettings, forHomeserver homeserver: String) -> UserSettings {
@@ -78,29 +75,53 @@ nonisolated struct MatchaUserSessionHook: UserSessionHookProtocol {
     }
 }
 
-/// Hides the call buttons of the room header, room details, member details and user profile screens.
-struct MatchaHiddenCallsHook: RoomScreenHookProtocol, RoomDetailsScreenHookProtocol, RoomMemberDetailsScreenHookProtocol, UserProfileScreenHookProtocol {
+/// Shows the call buttons of the room header, room details, member details and user profile screens only when the session's
+/// homeserver supports MatrixRTC on LiveKit (platform plan decision 17): hidden while the check runs and when it fails.
+/// Not redundant: conforming to these `Sendable` protocols makes a type nonisolated by default.
+@MainActor final class MatchaCallsHook: RoomScreenHookProtocol, RoomDetailsScreenHookProtocol, RoomMemberDetailsScreenHookProtocol, UserProfileScreenHookProtocol {
+    /// A hook only shapes a screen's first state, so the four view models follow this for a result that comes later.
+    @Published private(set) var isSupported = false
+    private var reachabilityCancellable: AnyCancellable?
+    
+    init(clientProxy: ClientProxyProtocol) {
+        // The proxy reads any error as no, so the check runs as the session starts and again each time the proxy reports the
+        // homeserver reachable (sync starting or changing state, a resume from the background included) until it says yes.
+        // No removeDuplicates: the subject starts at .reachable, so after an offline cold launch sync's first .reachable is
+        // a repeat. ponytail: a request that fails while sync keeps running waits for the next report; retry on a timer if
+        // that turns out to matter.
+        reachabilityCancellable = clientProxy.homeserverReachabilityPublisher
+            .filter { $0 == .reachable }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, !isSupported else { return }
+                Task {
+                    let supported = await clientProxy.isLiveKitRTCSupported
+                    self.isSupported = self.isSupported || supported // A late no from an earlier check can't undo a yes.
+                }
+            }
+    }
+    
     func update(_ viewState: RoomScreenViewState) -> RoomScreenViewState {
         var viewState = viewState
-        viewState.isCallingEnabled = false
+        viewState.isCallingEnabled = isSupported
         return viewState
     }
     
     func update(_ viewState: RoomDetailsScreenViewState) -> RoomDetailsScreenViewState {
         var viewState = viewState
-        viewState.isCallingEnabled = false
+        viewState.isCallingEnabled = isSupported
         return viewState
     }
     
     func update(_ viewState: RoomMemberDetailsScreenViewState) -> RoomMemberDetailsScreenViewState {
         var viewState = viewState
-        viewState.isCallingEnabled = false
+        viewState.isCallingEnabled = isSupported
         return viewState
     }
     
     func update(_ viewState: UserProfileScreenViewState) -> UserProfileScreenViewState {
         var viewState = viewState
-        viewState.isCallingEnabled = false
+        viewState.isCallingEnabled = isSupported
         return viewState
     }
 }

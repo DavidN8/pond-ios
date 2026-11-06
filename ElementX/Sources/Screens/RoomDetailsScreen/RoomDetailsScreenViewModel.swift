@@ -70,6 +70,11 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         super.init(initialViewState: userSession.userHooks.roomDetailsScreenHook.update(viewState),
                    mediaProvider: userSession.mediaProvider)
         
+        // matcha: the homeserver's LiveKit check can finish after this screen is built.
+        (userSession.userHooks.roomDetailsScreenHook as? MatchaCallsHook)?.$isSupported
+            .sink { [weak self] in self?.state.isCallingEnabled = $0 }
+            .store(in: &cancellables)
+        
         Task {
             state.reportRoomEnabled = await userSession.clientProxy.isReportRoomSupported
         }

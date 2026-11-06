@@ -8,6 +8,7 @@
 import Combine
 @testable import ElementX
 import Foundation
+import MatrixRustSDKMocks
 import Testing
 
 struct MatchaAppHooksTests {
@@ -47,19 +48,113 @@ struct MatchaAppHooksTests {
     }
     
     @Test
-    func hidesCalls() {
-        let userHooks = MatchaUserSessionHook().makeUserHooks(for: ClientProxyMock(.init()))
+    func showsCallsOnceTheHomeserverSupportsLiveKit() async throws {
+        let clientProxy = ClientProxyMock(.init())
+        clientProxy.underlyingIsLiveKitRTCSupported = true
+        let userHooks = MatchaUserSessionHook().makeUserHooks(for: clientProxy)
+        #expect(callButtons(of: userHooks) == [false, false, false, false]) // While the check runs.
+        
+        try await finishCheck(of: userHooks)
+        #expect(callButtons(of: userHooks) == [true, true, true, true])
+    }
+    
+    @Test
+    func hidesCallsWhenTheHomeserverDoesntSupportLiveKit() async throws {
+        let clientProxy = ClientProxyMock(.init())
+        clientProxy.underlyingIsLiveKitRTCSupported = false
+        let userHooks = MatchaUserSessionHook().makeUserHooks(for: clientProxy)
+        
+        try await finishCheck(of: userHooks)
+        #expect(clientProxy.isLiveKitRTCSupportedCalled)
+        #expect(callButtons(of: userHooks) == [false, false, false, false])
+    }
+    
+    @Test
+    func hidesCallsWhenTheCheckFails() async throws {
+        // The real proxy, as it is the one that turns the SDK's error into "unsupported".
+        let client = ClientSDKMock(.init(userID: "@alice:matrix.org"))
+        client.isLivekitRtcSupportedClosure = { throw ClientSDKMock.MockError.generic }
+        let clientProxy = try await ClientProxy(client: client,
+                                                networkMonitor: NetworkMonitorMock(.init()),
+                                                userSettings: AppSettings.volatile().userSettings(for: "@alice:matrix.org"),
+                                                analyticsService: AnalyticsServiceMock(.init()))
+        let userHooks = MatchaUserSessionHook().makeUserHooks(for: clientProxy)
+        
+        try await finishCheck(of: userHooks)
+        #expect(client.isLivekitRtcSupportedCalled)
+        #expect(callButtons(of: userHooks) == [false, false, false, false])
+    }
+    
+    @Test
+    func checksAgainOnceTheHomeserverIsReachableAgain() async throws {
+        let clientProxy = ClientProxyMock(.init())
+        let reachability = CurrentValueSubject<HomeserverReachability, Never>(.reachable)
+        clientProxy.homeserverReachabilityPublisher = reachability.asCurrentValuePublisher()
+        clientProxy.underlyingIsLiveKitRTCSupported = false // The first check failed, say offline.
+        let userHooks = MatchaUserSessionHook().makeUserHooks(for: clientProxy)
+        try await finishCheck(of: userHooks)
+        
+        clientProxy.underlyingIsLiveKitRTCSupported = true
+        reachability.send(.suspended)
+        reachability.send(.reachable)
+        try await finishCheck(of: userHooks)
+        #expect(clientProxy.isLiveKitRTCSupportedCallsCount == 2)
+        #expect(callButtons(of: userHooks) == [true, true, true, true])
+    }
+    
+    @Test
+    func checksAgainWhenSyncStartsAfterAnOfflineLaunch() async throws {
+        let clientProxy = ClientProxyMock(.init())
+        // The real proxy starts at .reachable, and an offline launch never changes it before sync starts.
+        let reachability = CurrentValueSubject<HomeserverReachability, Never>(.reachable)
+        clientProxy.homeserverReachabilityPublisher = reachability.asCurrentValuePublisher()
+        clientProxy.underlyingIsLiveKitRTCSupported = false
+        let userHooks = MatchaUserSessionHook().makeUserHooks(for: clientProxy)
+        try await finishCheck(of: userHooks)
+        
+        clientProxy.underlyingIsLiveKitRTCSupported = true
+        reachability.send(.reachable)
+        try await finishCheck(of: userHooks)
+        #expect(clientProxy.isLiveKitRTCSupportedCallsCount == 2)
+        #expect(callButtons(of: userHooks) == [true, true, true, true])
+    }
+    
+    @Test
+    func screensBuiltBeforeTheCheckFinishesShowCallsOnceItDoes() async throws {
+        let clientProxy = ClientProxyMock(.init())
+        clientProxy.underlyingIsLiveKitRTCSupported = true
+        let userSession = UserSessionMock(.init(clientProxy: clientProxy, userHooks: MatchaUserSessionHook().makeUserHooks(for: clientProxy)))
         let roomProxy = JoinedRoomProxyMock(.init(isDirect: true))
+        roomProxy.getMemberUserIDClosure = { _ in .success(RoomMemberProxyMock.mockAlice) }
         
-        let roomScreen = RoomScreenViewState(roomAvatar: .room(id: roomProxy.id, name: nil, avatarURL: nil), hasOngoingCall: true, isDM: true, hasSuccessor: false)
-        let roomDetails = RoomDetailsScreenViewState(details: roomProxy.details, isEncrypted: true, isDirect: true, joinedMembersCount: 2, bindings: .init())
-        let memberDetails = RoomMemberDetailsScreenViewState(userID: "@alice:example.com", bindings: .init())
-        let userProfile = UserProfileScreenViewState(userID: "@alice:example.com", isOwnUser: false, isPresentedModally: false, bindings: .init())
+        let room = makeRoomScreen(userSession: userSession, roomProxy: roomProxy)
+        let roomDetails = RoomDetailsScreenViewModel(roomProxy: roomProxy,
+                                                     userSession: userSession,
+                                                     analyticsService: AnalyticsServiceMock(.init()),
+                                                     userIndicatorController: UserIndicatorControllerMock(),
+                                                     notificationSettingsProxy: NotificationSettingsProxyMock(with: .init()),
+                                                     attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()))
+        let memberDetails = RoomMemberDetailsScreenViewModel(userID: RoomMemberProxyMock.mockAlice.userID,
+                                                             roomProxy: roomProxy,
+                                                             userSession: userSession,
+                                                             analytics: AnalyticsServiceMock(.init()),
+                                                             userIndicatorController: UserIndicatorControllerMock())
+        let userProfile = UserProfileScreenViewModel(userID: RoomMemberProxyMock.mockAlice.userID,
+                                                     isPresentedModally: false,
+                                                     userSession: userSession,
+                                                     analytics: AnalyticsServiceMock(.init()),
+                                                     userIndicatorController: UserIndicatorControllerMock())
+        // The room screen's own state is private; its timeline's Join button follows it.
+        #expect(room.timelineViewModel.context.viewState.isCallJoiningHidden)
+        #expect(!roomDetails.context.viewState.isCallingEnabled)
+        #expect(!memberDetails.context.viewState.isCallingEnabled)
+        #expect(!userProfile.context.viewState.isCallingEnabled)
         
-        #expect(!userHooks.roomScreenHook.update(roomScreen).isCallingEnabled)
-        #expect(!userHooks.roomDetailsScreenHook.update(roomDetails).isCallingEnabled)
-        #expect(!userHooks.roomMemberDetailsScreenHook.update(memberDetails).isCallingEnabled)
-        #expect(!userHooks.userProfileScreenHook.update(userProfile).isCallingEnabled)
+        try await finishCheck(of: userSession.userHooks)
+        #expect(!room.timelineViewModel.context.viewState.isCallJoiningHidden)
+        #expect(roomDetails.context.viewState.isCallingEnabled)
+        #expect(memberDetails.context.viewState.isCallingEnabled)
+        #expect(userProfile.context.viewState.isCallingEnabled)
     }
     
     @Test
@@ -85,20 +180,45 @@ struct MatchaAppHooksTests {
     func theRoomScreenGivesItsTimelineTheCallRule(callsHidden: Bool) {
         let clientProxy = ClientProxyMock(.init())
         let userHooks = callsHidden ? MatchaUserSessionHook().makeUserHooks(for: clientProxy) : UserHooks()
-        let coordinator = RoomScreenCoordinator(parameters: .init(userSession: UserSessionMock(.init(clientProxy: clientProxy, userHooks: userHooks)),
-                                                                  roomProxy: JoinedRoomProxyMock(.init()),
-                                                                  timelineController: TimelineControllerMock(.init()),
-                                                                  mediaPlayerProvider: MediaPlayerProviderMock(),
-                                                                  emojiProvider: EmojiProvider(userSettings: .mock()),
-                                                                  linkMetadataProvider: LinkMetadataProvider(),
-                                                                  completionSuggestionService: CompletionSuggestionServiceMock(configuration: .init()),
-                                                                  ongoingCallRoomIDPublisher: .init(.init(nil)),
-                                                                  appMediator: AppMediatorMock(.init()),
-                                                                  analytics: AnalyticsServiceMock(.init()),
-                                                                  composerDraftService: ComposerDraftServiceMock(.init()),
-                                                                  timelineControllerFactory: TimelineControllerFactoryMock(.init()),
-                                                                  userIndicatorController: UserIndicatorControllerMock()))
+        let coordinator = makeRoomScreen(userSession: UserSessionMock(.init(clientProxy: clientProxy, userHooks: userHooks)), roomProxy: JoinedRoomProxyMock(.init()))
         
         #expect(coordinator.timelineViewModel.context.viewState.isCallJoiningHidden == callsHidden)
+    }
+    
+    // MARK: - Helpers
+    
+    /// Whether the room, room details, member details and user profile screens offer calls.
+    private func callButtons(of userHooks: UserHooks) -> [Bool] {
+        let roomProxy = JoinedRoomProxyMock(.init(isDirect: true))
+        let roomScreen = RoomScreenViewState(roomAvatar: .room(id: roomProxy.id, name: nil, avatarURL: nil), hasOngoingCall: true, isDM: true, hasSuccessor: false)
+        let roomDetails = RoomDetailsScreenViewState(details: roomProxy.details, isEncrypted: true, isDirect: true, joinedMembersCount: 2, bindings: .init())
+        let memberDetails = RoomMemberDetailsScreenViewState(userID: "@alice:example.com", bindings: .init())
+        let userProfile = UserProfileScreenViewState(userID: "@alice:example.com", isOwnUser: false, isPresentedModally: false, bindings: .init())
+        return [userHooks.roomScreenHook.update(roomScreen).isCallingEnabled,
+                userHooks.roomDetailsScreenHook.update(roomDetails).isCallingEnabled,
+                userHooks.roomMemberDetailsScreenHook.update(memberDetails).isCallingEnabled,
+                userHooks.userProfileScreenHook.update(userProfile).isCallingEnabled]
+    }
+    
+    /// Waits for the LiveKit check the hooks started. Call it before the test first suspends, as the check's task runs then.
+    private func finishCheck(of userHooks: UserHooks) async throws {
+        let callsHook = try #require(userHooks.roomScreenHook as? MatchaCallsHook)
+        try await deferFulfillment(callsHook.$isSupported.dropFirst()) { _ in true }.fulfill()
+    }
+    
+    private func makeRoomScreen(userSession: UserSessionProtocol, roomProxy: JoinedRoomProxyProtocol) -> RoomScreenCoordinator {
+        RoomScreenCoordinator(parameters: .init(userSession: userSession,
+                                                roomProxy: roomProxy,
+                                                timelineController: TimelineControllerMock(.init()),
+                                                mediaPlayerProvider: MediaPlayerProviderMock(),
+                                                emojiProvider: EmojiProvider(userSettings: .mock()),
+                                                linkMetadataProvider: LinkMetadataProvider(),
+                                                completionSuggestionService: CompletionSuggestionServiceMock(configuration: .init()),
+                                                ongoingCallRoomIDPublisher: .init(.init(nil)),
+                                                appMediator: AppMediatorMock(.init()),
+                                                analytics: AnalyticsServiceMock(.init()),
+                                                composerDraftService: ComposerDraftServiceMock(.init()),
+                                                timelineControllerFactory: TimelineControllerFactoryMock(.init()),
+                                                userIndicatorController: UserIndicatorControllerMock()))
     }
 }

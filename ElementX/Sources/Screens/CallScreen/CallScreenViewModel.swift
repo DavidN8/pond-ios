@@ -163,14 +163,8 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
                 configuration.elementCallBaseURL
             }
             
-            // We only set the analytics configuration if analytics are enabled
-            let analyticsConfiguration: ElementCallAnalyticsConfiguration? = if analyticsService.isEnabled {
-                .init(posthogAPIHost: userSettings.app.elementCallPosthogAPIHost,
-                      posthogAPIKey: userSettings.app.elementCallPosthogAPIKey,
-                      sentryDSN: userSettings.app.elementCallPosthogSentryDSN)
-            } else {
-                nil
-            }
+            // matcha: never, as POND's privacy policy promises no analytics; Element Call would send to Element's PostHog and Sentry.
+            let analyticsConfiguration: ElementCallAnalyticsConfiguration? = nil
             let rageshakeURL: String? = if case let .url(baseURL) = userSettings.app.bugReportRageshakeURL.publisher.value {
                 baseURL.absoluteString
             } else {
