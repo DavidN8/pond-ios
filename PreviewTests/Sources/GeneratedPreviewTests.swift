@@ -145,6 +145,13 @@ extension PreviewTests {
     }
 
     @Test
+    func changePasswordScreen() async throws {
+        for (index, preview) in ChangePasswordScreen_Previews._allPreviews.enumerated() {
+            try await assertSnapshots(matching: preview, step: index)
+        }
+    }
+
+    @Test
     func channelsScreen() async throws {
         for (index, preview) in ChannelsScreen_Previews._allPreviews.enumerated() {
             try await assertSnapshots(matching: preview, step: index)

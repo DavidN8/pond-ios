@@ -831,6 +831,15 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
+    func changePassword(oldPassword: String, newPassword: String) async -> Result<Void, PasswordChangeFailure> { // matcha
+        do {
+            return try await PasswordChangeRequest.send(oldPassword: oldPassword, newPassword: newPassword, userID: userID, session: client.session())
+        } catch {
+            MXLog.error("Failed reading the session to change the password: \(error)")
+            return .failure(.failed)
+        }
+    }
+    
     func logout() async {
         do {
             try await client.logout()

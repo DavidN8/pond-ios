@@ -40,4 +40,13 @@ struct HomeserverCapabilitiesProxy: HomeserverCapabilitiesProxyProtocol {
             return true
         }
     }
+    
+    func canChangePassword() async -> Bool { // matcha
+        do {
+            return try await underlyingCapabilities.canChangePassword()
+        } catch {
+            MXLog.error("Failure checking canChangePassword: \(error)")
+            return false
+        }
+    }
 }

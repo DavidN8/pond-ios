@@ -83,6 +83,10 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "CallNotificationRoomTimelineView_Previews")
     }
 
+    func testChangePasswordScreen() async throws {
+        try await performAccessibilityAudit(named: "ChangePasswordScreen_Previews")
+    }
+
     func testChannelsScreen() async throws {
         try await performAccessibilityAudit(named: "ChannelsScreen_Previews")
     }

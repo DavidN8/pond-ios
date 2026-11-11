@@ -274,3 +274,14 @@
 /* matcha: the signed-out start screen, in place of Element's "Be in your element" and its welcome line. */
 "screen_matcha_onboarding_welcome_title" = "Welcome to POND";
 "screen_matcha_onboarding_welcome_message" = "A fork of Element X for personal use.";
+
+/* matcha: Settings → Change password, for accounts on homeservers that use password sign-in. */
+"screen_matcha_change_password_title" = "Change password";
+"screen_matcha_change_password_current" = "Current password";
+"screen_matcha_change_password_new" = "New password";
+"screen_matcha_change_password_confirm" = "Confirm new password";
+"screen_matcha_change_password_footer" = "Your other devices stay signed in.";
+"screen_matcha_change_password_mismatch" = "The new passwords don't match.";
+"screen_matcha_change_password_success" = "Password changed";
+"screen_matcha_change_password_error_title" = "Couldn't change your password";
+"screen_matcha_change_password_error_wrong_password" = "Your current password isn't correct.";

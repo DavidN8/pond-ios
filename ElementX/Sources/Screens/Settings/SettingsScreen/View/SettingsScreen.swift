@@ -126,6 +126,13 @@ struct SettingsScreen: View {
                         })
             }
             
+            if context.viewState.showsChangePassword { // matcha
+                ListRow(label: .default(title: UntranslatedL10n.screenMatchaChangePasswordTitle, icon: \.lock),
+                        kind: .navigationLink {
+                            context.send(viewAction: .changePassword)
+                        })
+            }
+            
             switch context.viewState.securitySectionMode {
             case .secureBackup:
                 ListRow(label: .default(title: L10n.commonEncryption,

@@ -20,6 +20,7 @@ enum SettingsScreenViewModelAction {
     case linkNewDevice
     case notifications
     case emojiPack // matcha
+    case changePassword // matcha
     case secureBackup
     case moderationAndSafety
     case reportBug
@@ -53,6 +54,8 @@ struct SettingsScreenViewState: BindableState {
     var showDeveloperOptions: Bool
     /// matcha: the personal custom emoji pack's row, while custom emoji are on.
     var showsEmojiPack = false
+    /// matcha: the Change password row, where the homeserver allows it.
+    var showsChangePassword = false
     
     var securitySectionMode = SettingsScreenSecuritySectionMode.none
     var showSecuritySectionBadge = false
@@ -113,6 +116,7 @@ enum SettingsScreenViewAction {
     case linkNewDevice
     case notifications
     case emojiPack // matcha
+    case changePassword // matcha
     case secureBackup
     case moderationAndSafety
     case reportBug

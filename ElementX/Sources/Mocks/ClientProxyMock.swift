@@ -33,6 +33,7 @@ struct ClientProxyMockConfiguration {
     
     var canChangeAvatar = true
     var canChangeDisplayName = true
+    var canChangePassword = true // matcha
     
     var maxMediaUploadSize: UInt = 100 * 1024 * 1024
     
@@ -130,6 +131,7 @@ extension ClientProxyMock {
         let capabilities = HomeserverCapabilitiesProxyMock()
         capabilities.canChangeAvatarReturnValue = configuration.canChangeAvatar
         capabilities.canChangeDisplayNameReturnValue = configuration.canChangeDisplayName
+        capabilities.canChangePasswordReturnValue = configuration.canChangePassword // matcha
         self.capabilities = capabilities
         
         roomForIdentifierClosure = { [weak self] identifier in

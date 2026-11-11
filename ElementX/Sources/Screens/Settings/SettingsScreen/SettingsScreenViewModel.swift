@@ -86,6 +86,7 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
             await userSession.clientProxy.loadUserProfileIfNeeded()
         }
         Task { await state.accountProfileURL = userSession.clientProxy.accountURL(action: .profile) }
+        Task { await state.showsChangePassword = userSession.clientProxy.capabilities.canChangePassword() } // matcha
     }
     
     override func process(viewAction: SettingsScreenViewAction) {
@@ -121,6 +122,8 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
             actionsSubject.send(.notifications)
         case .emojiPack: // matcha
             actionsSubject.send(.emojiPack)
+        case .changePassword: // matcha
+            actionsSubject.send(.changePassword)
         case .secureBackup:
             actionsSubject.send(.secureBackup)
         case .moderationAndSafety:

@@ -250,6 +250,8 @@ protocol ClientProxyProtocol: AnyObject {
     func linkNewDeviceService() -> LinkNewDeviceServiceProtocol
     
     func deactivateAccount(password: String, eraseData: Bool) async -> Result<Void, ClientProxyError>
+    /// matcha: changes the account's password, see `PasswordChangeRequest`.
+    func changePassword(oldPassword: String, newPassword: String) async -> Result<Void, PasswordChangeFailure>
     
     func logout() async
     

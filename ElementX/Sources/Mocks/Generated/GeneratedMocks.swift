@@ -3713,6 +3713,48 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
             return deactivateAccountPasswordEraseDataReturnValue
         }
     }
+    //MARK: - changePassword
+
+    private let changePasswordOldPasswordNewPasswordCallsCountLock = NSLock()
+    private nonisolated(unsafe) var changePasswordOldPasswordNewPasswordUnderlyingCallsCount = 0
+    var changePasswordOldPasswordNewPasswordCallsCount: Int {
+        get { changePasswordOldPasswordNewPasswordCallsCountLock.withLock { changePasswordOldPasswordNewPasswordUnderlyingCallsCount } }
+        set { changePasswordOldPasswordNewPasswordCallsCountLock.withLock { changePasswordOldPasswordNewPasswordUnderlyingCallsCount = newValue } }
+    }
+    var changePasswordOldPasswordNewPasswordCalled: Bool {
+        return changePasswordOldPasswordNewPasswordCallsCount > 0
+    }
+    private let changePasswordOldPasswordNewPasswordReceivedArgumentsLock = NSLock()
+    private nonisolated(unsafe) var changePasswordOldPasswordNewPasswordUnderlyingReceivedArguments: (oldPassword: String, newPassword: String)?
+    var changePasswordOldPasswordNewPasswordReceivedArguments: (oldPassword: String, newPassword: String)? {
+        get { changePasswordOldPasswordNewPasswordReceivedArgumentsLock.withLock { changePasswordOldPasswordNewPasswordUnderlyingReceivedArguments } }
+        set { changePasswordOldPasswordNewPasswordReceivedArgumentsLock.withLock { changePasswordOldPasswordNewPasswordUnderlyingReceivedArguments = newValue } }
+    }
+    private let changePasswordOldPasswordNewPasswordReceivedInvocationsLock = NSLock()
+    private nonisolated(unsafe) var changePasswordOldPasswordNewPasswordUnderlyingReceivedInvocations: [(oldPassword: String, newPassword: String)] = []
+    var changePasswordOldPasswordNewPasswordReceivedInvocations: [(oldPassword: String, newPassword: String)] {
+        get { changePasswordOldPasswordNewPasswordReceivedInvocationsLock.withLock { changePasswordOldPasswordNewPasswordUnderlyingReceivedInvocations } }
+        set { changePasswordOldPasswordNewPasswordReceivedInvocationsLock.withLock { changePasswordOldPasswordNewPasswordUnderlyingReceivedInvocations = newValue } }
+    }
+
+    private let changePasswordOldPasswordNewPasswordReturnValueLock = NSLock()
+    private nonisolated(unsafe) var changePasswordOldPasswordNewPasswordUnderlyingReturnValue: Result<Void, PasswordChangeFailure>!
+    var changePasswordOldPasswordNewPasswordReturnValue: Result<Void, PasswordChangeFailure>! {
+        get { changePasswordOldPasswordNewPasswordReturnValueLock.withLock { changePasswordOldPasswordNewPasswordUnderlyingReturnValue } }
+        set { changePasswordOldPasswordNewPasswordReturnValueLock.withLock { changePasswordOldPasswordNewPasswordUnderlyingReturnValue = newValue } }
+    }
+    nonisolated(unsafe) var changePasswordOldPasswordNewPasswordClosure: ((String, String) async -> Result<Void, PasswordChangeFailure>)?
+
+    @concurrent func changePassword(oldPassword: String, newPassword: String) async -> Result<Void, PasswordChangeFailure> {
+        changePasswordOldPasswordNewPasswordCallsCountLock.withLock { changePasswordOldPasswordNewPasswordUnderlyingCallsCount += 1 }
+        changePasswordOldPasswordNewPasswordReceivedArguments = (oldPassword: oldPassword, newPassword: newPassword)
+        changePasswordOldPasswordNewPasswordReceivedInvocationsLock.withLock { changePasswordOldPasswordNewPasswordUnderlyingReceivedInvocations.append((oldPassword: oldPassword, newPassword: newPassword)) }
+        if let changePasswordOldPasswordNewPasswordClosure = changePasswordOldPasswordNewPasswordClosure {
+            return await changePasswordOldPasswordNewPasswordClosure(oldPassword, newPassword)
+        } else {
+            return changePasswordOldPasswordNewPasswordReturnValue
+        }
+    }
     //MARK: - logout
 
     private let logoutCallsCountLock = NSLock()
@@ -5813,6 +5855,34 @@ nonisolated class HomeserverCapabilitiesProxyMock: HomeserverCapabilitiesProxyPr
             return await canChangeDisplayNameClosure()
         } else {
             return canChangeDisplayNameReturnValue
+        }
+    }
+    //MARK: - canChangePassword
+
+    private let canChangePasswordCallsCountLock = NSLock()
+    private nonisolated(unsafe) var canChangePasswordUnderlyingCallsCount = 0
+    var canChangePasswordCallsCount: Int {
+        get { canChangePasswordCallsCountLock.withLock { canChangePasswordUnderlyingCallsCount } }
+        set { canChangePasswordCallsCountLock.withLock { canChangePasswordUnderlyingCallsCount = newValue } }
+    }
+    var canChangePasswordCalled: Bool {
+        return canChangePasswordCallsCount > 0
+    }
+
+    private let canChangePasswordReturnValueLock = NSLock()
+    private nonisolated(unsafe) var canChangePasswordUnderlyingReturnValue: Bool!
+    var canChangePasswordReturnValue: Bool! {
+        get { canChangePasswordReturnValueLock.withLock { canChangePasswordUnderlyingReturnValue } }
+        set { canChangePasswordReturnValueLock.withLock { canChangePasswordUnderlyingReturnValue = newValue } }
+    }
+    nonisolated(unsafe) var canChangePasswordClosure: (() async -> Bool)?
+
+    @concurrent func canChangePassword() async -> Bool {
+        canChangePasswordCallsCountLock.withLock { canChangePasswordUnderlyingCallsCount += 1 }
+        if let canChangePasswordClosure = canChangePasswordClosure {
+            return await canChangePasswordClosure()
+        } else {
+            return canChangePasswordReturnValue
         }
     }
 }

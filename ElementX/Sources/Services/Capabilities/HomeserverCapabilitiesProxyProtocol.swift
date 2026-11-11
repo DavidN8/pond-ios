@@ -12,4 +12,6 @@ protocol HomeserverCapabilitiesProxyProtocol {
     func refresh() async
     func canChangeAvatar() async -> Bool
     func canChangeDisplayName() async -> Bool
+    /// matcha: whether the server lets the account change its password (`m.change_password`); false when it can't say.
+    func canChangePassword() async -> Bool
 }

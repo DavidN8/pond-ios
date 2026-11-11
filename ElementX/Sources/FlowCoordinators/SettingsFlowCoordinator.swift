@@ -105,6 +105,8 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                     presentNotificationSettings()
                 case .emojiPack: // matcha
                     EmojiPackScreenCoordinator.push(.user, on: navigationStackCoordinator, flowParameters: flowParameters)
+                case .changePassword: // matcha
+                    ChangePasswordScreenCoordinator.push(on: navigationStackCoordinator, flowParameters: flowParameters)
                 case .secureBackup:
                     startEncryptionSettingsFlow()
                 case .moderationAndSafety:

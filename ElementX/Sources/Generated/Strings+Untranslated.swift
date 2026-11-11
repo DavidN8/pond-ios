@@ -132,6 +132,24 @@ internal nonisolated enum UntranslatedL10n {
   internal static var screenLabsEnableMatchaWorkspaces: String { return UntranslatedL10n.tr("Untranslated", "screen_labs_enable_matcha_workspaces") }
   /// Named threads in a chip bar, task boards, the Tasks, Notes and Channels tabs, reminders and space notes, shared with the POND web client. Applies the next time POND starts.
   internal static var screenLabsEnableMatchaWorkspacesDescription: String { return UntranslatedL10n.tr("Untranslated", "screen_labs_enable_matcha_workspaces_description") }
+  /// Confirm new password
+  internal static var screenMatchaChangePasswordConfirm: String { return UntranslatedL10n.tr("Untranslated", "screen_matcha_change_password_confirm") }
+  /// Current password
+  internal static var screenMatchaChangePasswordCurrent: String { return UntranslatedL10n.tr("Untranslated", "screen_matcha_change_password_current") }
+  /// Couldn't change your password
+  internal static var screenMatchaChangePasswordErrorTitle: String { return UntranslatedL10n.tr("Untranslated", "screen_matcha_change_password_error_title") }
+  /// Your current password isn't correct.
+  internal static var screenMatchaChangePasswordErrorWrongPassword: String { return UntranslatedL10n.tr("Untranslated", "screen_matcha_change_password_error_wrong_password") }
+  /// Your other devices stay signed in.
+  internal static var screenMatchaChangePasswordFooter: String { return UntranslatedL10n.tr("Untranslated", "screen_matcha_change_password_footer") }
+  /// The new passwords don't match.
+  internal static var screenMatchaChangePasswordMismatch: String { return UntranslatedL10n.tr("Untranslated", "screen_matcha_change_password_mismatch") }
+  /// New password
+  internal static var screenMatchaChangePasswordNew: String { return UntranslatedL10n.tr("Untranslated", "screen_matcha_change_password_new") }
+  /// Password changed
+  internal static var screenMatchaChangePasswordSuccess: String { return UntranslatedL10n.tr("Untranslated", "screen_matcha_change_password_success") }
+  /// Change password
+  internal static var screenMatchaChangePasswordTitle: String { return UntranslatedL10n.tr("Untranslated", "screen_matcha_change_password_title") }
   /// Some edits can't be decrypted on this device yet. Editing is off until they can be.
   internal static var screenMatchaDocsDecryptError: String { return UntranslatedL10n.tr("Untranslated", "screen_matcha_docs_decrypt_error") }
   /// This note is empty. Tap the pencil to start writing.
